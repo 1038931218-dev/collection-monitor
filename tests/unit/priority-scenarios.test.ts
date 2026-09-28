@@ -40,7 +40,7 @@ describe('Phase 2 Scenarios: Priority Engine with Payment History', () => {
         historical_overdue_rate: overdueRate,
         max_historical_overdue_days: avgDays ?? 0,
         payment_trend: trend,
-        payment_behavior: avgDays === null ? 'UNKNOWN' : avgDays <= 7 ? 'ON_TIME' : avgDays <= 14 ? 'LATE' : 'SEVERE_LATE',
+        payment_behavior: avgDays === null ? 'UNKNOWN' as const : avgDays <= 7 ? 'ON_TIME' as const : avgDays <= 14 ? 'LATE' as const : 'SEVERE_LATE' as const,
       } : undefined,
     };
   }
@@ -59,7 +59,7 @@ describe('Phase 2 Scenarios: Priority Engine with Payment History', () => {
       outstanding_amount: new DecimalMoney(amount * 100),
       is_overdue: days > 0,
       days_overdue: days,
-      status: days > 0 ? 'OVERDUE' : 'UNPAID',
+      status: days > 0 ? 'OVERDUE' as const : 'UNPAID' as const,
       currency: 'USD',
     };
   }

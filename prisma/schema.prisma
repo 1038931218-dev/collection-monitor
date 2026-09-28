@@ -1,65 +1,175 @@
-// Prisma Schema — AI收款管家 V0.1
-// 数据库：PostgreSQL（正式）。Phase 2 仅定义 Schema，暂不建库。
-// 金额统一使用 Int 分（cents）存储，保证精确性，禁止使用 Float。
+// Prisma Schema — AI收款管家 V0.1（Phase 3）
+//
+// 正式生产：PostgreSQL。当前开发/测试环境使用 SQLite 临时数据库。
+// 约束：
+//   - 金额一律 Int（cents，分），禁止 Float
+//   - 不使用任何 SQLite/PG 专属能力，保证切换时仅需改 datasource provider
+//   - 所有业务数据通过 company_id 隔离（多租户）
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite" // Phase 3 开发用；V0.1 生产切回 "postgresql"
   url      = env("DATABASE_URL")
 }
 
+// ─── 用户与租户 ───────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  password_hash String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  companies    Company[]
+  subscriptions Subscription[]
+}
+
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  currency    String   @default("USD")
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  owner_id    String
+  owner       User     @relation(fields: [owner_id], references: [id])
+
+  customers       Customer[]
+  invoices        Invoice[]
+  paymentRecords  PaymentRecord[]
+  uploads         Upload[]
+  collectionTasks CollectionTask[]
+  aiFeedbacks     AIFeedback[]
+  subscriptions   Subscription[]
+}
+
+// ─── 客户与发票 ───────────────────────────────────────────
+
 model Customer {
-  id            String         @id @default(cuid())
+  id            String   @id @default(cuid())
+  company_id    String
+  company       Company  @relation(fields: [company_id], references: [id])
   name          String
-  slug          String         @unique // 标准化后的小写名称，用于匹配
+  slug          String   // 标准化小写名称，用于匹配
   contact_email String?
   contact_phone String?
   notes         String?
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 
   invoices       Invoice[]
   paymentRecords PaymentRecord[]
+
+  @@unique([company_id, slug])
+  @@index([company_id])
 }
 
 model Invoice {
-  id                 String    @id @default(cuid())
+  id                 String   @id @default(cuid())
+  company_id         String
+  company            Company  @relation(fields: [company_id], references: [id])
   customer_id        String
-  customer           Customer  @relation(fields: [customer_id], references: [id])
+  customer           Customer @relation(fields: [customer_id], references: [id])
   invoice_number     String?
   invoice_date       DateTime
   due_date           DateTime
-  amount_cents       Int       // 发票总金额（分）
-  paid_amount_cents  Int       @default(0) // 累计已付金额（分）
-  currency           String    @default("USD")
-  status             String    @default("UNPAID") // UNPAID | PARTIALLY_PAID | PAID | OVERDUE
+  amount_cents       Int      // 发票总金额（分）
+  paid_amount_cents  Int      @default(0) // 累计已付金额（分）
+  currency           String   @default("USD")
+  status             String   @default("UNPAID") // UNPAID | PARTIALLY_PAID | PAID | OVERDUE
   paid_date          DateTime? // 最后一笔付款日期（可由 payment_records 推导）
-  created_at         DateTime  @default(now())
-  updated_at         DateTime  @updatedAt
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
 
   paymentRecords PaymentRecord[]
 
-  @@index([customer_id])
-  @@index([invoice_number, customer_id])
-  @@index([due_date])
+  @@index([company_id, customer_id])
+  @@index([company_id, invoice_number, customer_id])
+  @@index([company_id, due_date])
 }
 
 model PaymentRecord {
-  id            String   @id @default(cuid())
-  invoice_id    String?
-  invoice       Invoice? @relation(fields: [invoice_id], references: [id])
-  customer_id   String
-  customer      Customer @relation(fields: [customer_id], references: [id])
+  id             String   @id @default(cuid())
+  company_id     String
+  company        Company  @relation(fields: [company_id], references: [id])
+  customer_id    String
+  customer       Customer @relation(fields: [customer_id], references: [id])
+  invoice_id     String?
+  invoice        Invoice? @relation(fields: [invoice_id], references: [id])
   payment_date   DateTime // 实际付款日期
   amount_cents   Int      // 本次付款金额（分）
-  currency        String   @default("USD")
-  payment_method  String?  // bank_transfer | cash | check | credit_card | other
-  notes           String?
+  currency       String   @default("USD")
+  payment_method String?  // bank_transfer | cash | check | credit_card | other
+  notes          String?
+  created_at     DateTime @default(now())
+
+  @@index([company_id, customer_id, payment_date])
+  @@index([company_id, invoice_id, payment_date])
+}
+
+// ─── 文件上传与任务 ────────────────────────────────────────
+
+model Upload {
+  id           String   @id @default(cuid())
+  company_id   String
+  company      Company  @relation(fields: [company_id], references: [id])
+  filename     String
+  content_type String?
+  file_size    Int      @default(0)
+  status       String   @default("PENDING") // PENDING | PARSED | FAILED
+  errors       String?
+  created_at   DateTime @default(now())
+
+  @@index([company_id, created_at])
+}
+
+model CollectionTask {
+  id              String   @id @default(cuid())
+  company_id      String
+  company         Company  @relation(fields: [company_id], references: [id])
+  invoice_id      String?
+  customer_id     String?
+  priority_score  Int
+  priority_level  String   // LOW | MEDIUM | HIGH
+  reason          String?
+  action          String?
+  completed_at    DateTime?
   created_at      DateTime @default(now())
 
-  @@index([customer_id, payment_date])
-  @@index([invoice_id, payment_date])
+  @@index([company_id, priority_score])
+}
+
+// ─── AI 与订阅 ─────────────────────────────────────────────
+
+model AIFeedback {
+  id          String   @id @default(cuid())
+  company_id  String
+  company     Company  @relation(fields: [company_id], references: [id])
+  task_id     String?
+  rating      Int?     // 1-5
+  comment     String?
+  created_at  DateTime @default(now())
+
+  @@index([company_id, task_id])
+}
+
+model Subscription {
+  id          String   @id @default(cuid())
+  user_id     String
+  user        User     @relation(fields: [user_id], references: [id])
+  company_id  String
+  company     Company  @relation(fields: [company_id], references: [id])
+  plan        String   @default("FREE") // FREE | PRO | ENTERPRISE
+  status      String   @default("ACTIVE") // ACTIVE | CANCELED | EXPIRED
+  current_period_end DateTime
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([user_id])
+  @@index([company_id])
 }
