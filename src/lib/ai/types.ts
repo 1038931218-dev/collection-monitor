@@ -8,7 +8,7 @@
  *   4. API Key 只存服务端环境变量，不暴露给前端
  */
 import { z } from 'zod';
-import { DecimalMoney } from '../lib/decimal';
+import { DecimalMoney } from '../decimal';
 
 // ─── AI 输入：结构化数据（由程序计算，LLM 只读不解） ───────────────────────
 

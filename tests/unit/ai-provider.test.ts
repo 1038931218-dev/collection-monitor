@@ -9,7 +9,9 @@
  *   5. 空数据时不崩溃
  *   6. 超长客户名称/备注不崩溃
  */
-import { MockAIProvider, OpenRouterProvider } from '../../src/lib/ai/openrouter-provider';
+import { OpenRouterProvider } from '../../src/lib/ai/openrouter-provider';
+import { MockAIProvider } from '../../src/lib/ai/mock-provider';
+import { getAIProvider, setTestProvider, resetTestProvider } from '../../src/lib/ai/factory';
 import { AIService } from '../../src/lib/ai/service';
 import {
   AIInvoiceContext,
@@ -51,8 +53,8 @@ describe('Phase 4: AI Provider Layer', () => {
       };
 
       const result = await mockProvider.analyzeReport(data);
-      expect(result.summary).toContain('模拟');
-      expect(result.risk_assessment).toContain('模拟');
+      expect(result.summary).toContain('[模拟]');
+      expect(result.risk_assessment).toContain('中风险'); // overdue_ratio=20 → 中风险
       expect(result.key_findings.length).toBeGreaterThan(0);
       expect(result.recommendations.length).toBeGreaterThan(0);
     });
@@ -196,7 +198,7 @@ describe('Phase 4: AI Provider Layer', () => {
   describe('Fallback Behavior', () => {
     test('AI 抛出错误时使用 fallback', async () => {
       const errorProvider = new MockAIProvider({
-        throwErr: new Error('Simulated AI failure'),
+        throwOnError: true,
       });
 
       const data: AIInvoiceContext = {
@@ -292,6 +294,127 @@ describe('Phase 4: AI Provider Layer', () => {
       const result = await mockProvider.analyzeInvoice(data);
       expect(result).toBeDefined();
       expect(result.summary).toContain('测试有限公司');
+    });
+  });
+
+  describe('Provider Configuration Switching', () => {
+    afterEach(() => {
+      resetTestProvider();
+    });
+
+    test('getAIProvider 默认返回 mock provider', () => {
+      resetTestProvider();
+      const provider = getAIProvider();
+      expect(provider.getName()).toBe('mock');
+    });
+
+    test('setTestProvider 可以注入测试 provider', () => {
+      const customProvider = new MockAIProvider();
+      setTestProvider(customProvider);
+
+      const provider = getAIProvider();
+      expect(provider).toBe(customProvider);
+      expect(provider.getName()).toBe('mock');
+
+      resetTestProvider();
+    });
+  });
+
+  describe('generateCollectionMessage', () => {
+    test('PROFESSIONAL 语气生成专业消息', async () => {
+      const data: AIInvoiceContext = {
+        invoice_number: 'INV-001',
+        customer_name: '测试客户',
+        amount: '$1,000',
+        paid_amount: '$0',
+        outstanding_amount: '$1,000',
+        days_overdue: 30,
+        priority_score: 40,
+        priority_level: 'LOW',
+        overdue_score: 30,
+        amount_score: 10,
+        history_score: 40,
+        trend_score: 40,
+        reason: '逾期30天',
+        recommended_action: 'follow_up_later',
+      };
+
+      const result = await mockProvider.generateCollectionMessage(data, 'PROFESSIONAL');
+      expect(result.subject).toBeDefined();
+      expect(result.message).toBeDefined();
+      expect(result.subject.length).toBeGreaterThan(0);
+      expect(result.message.length).toBeGreaterThan(0);
+    });
+
+    test('FRIENDLY 语气生成友好消息', async () => {
+      const data: AIInvoiceContext = {
+        invoice_number: 'INV-001',
+        customer_name: '老客户',
+        amount: '$500',
+        paid_amount: '$0',
+        outstanding_amount: '$500',
+        days_overdue: 5,
+        priority_score: 20,
+        priority_level: 'LOW',
+        overdue_score: 10,
+        amount_score: 5,
+        history_score: 40,
+        trend_score: 40,
+        reason: '轻微逾期',
+        recommended_action: 'monitor',
+      };
+
+      const result = await mockProvider.generateCollectionMessage(data, 'FRIENDLY');
+      expect(result.subject).toContain('提醒');
+      expect(result.message).toContain('如您已付款');
+    });
+
+    test('FIRM 语气生成坚定消息', async () => {
+      const data: AIInvoiceContext = {
+        invoice_number: 'INV-001',
+        customer_name: '长期逾期客户',
+        amount: '$5,000',
+        paid_amount: '$0',
+        outstanding_amount: '$5,000',
+        days_overdue: 120,
+        priority_score: 90,
+        priority_level: 'HIGH',
+        overdue_score: 100,
+        amount_score: 50,
+        history_score: 90,
+        trend_score: 80,
+        reason: '严重长期逾期',
+        recommended_action: 'follow_up_now',
+      };
+
+      const result = await mockProvider.generateCollectionMessage(data, 'FIRM');
+      expect(result.subject).toContain('紧急');
+      expect(result.message).toContain('远超正常账期');
+    });
+
+    test('无历史数据的客户生成基础消息', async () => {
+      const data: AIInvoiceContext = {
+        invoice_number: 'INV-001',
+        customer_name: '新客户',
+        amount: '$1,000',
+        paid_amount: '$0',
+        outstanding_amount: '$1,000',
+        days_overdue: 10,
+        priority_score: 30,
+        priority_level: 'LOW',
+        overdue_score: 10,
+        amount_score: 10,
+        history_score: 40,
+        trend_score: 40,
+        reason: '新客户首次逾期',
+        recommended_action: 'follow_up_later',
+      };
+
+      const result = await mockProvider.generateCollectionMessage(data, 'PROFESSIONAL');
+      expect(result.subject).toBeDefined();
+      expect(result.message).toBeDefined();
+      // 不应包含客户历史相关内容
+      expect(result.message).not.toContain('平均付款天数');
     });
   });
 });

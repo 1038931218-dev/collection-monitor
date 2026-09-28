@@ -17,6 +17,12 @@ export interface AIProvider {
 
   /** 分析单条发票的优先级和建议 */
   analyzeInvoice(data: AIInvoiceContext): Promise<AiInvoiceAnalysis>;
+
+  /** 生成催款消息草稿 */
+  generateCollectionMessage(data: AIInvoiceContext, tone?: 'FRIENDLY' | 'PROFESSIONAL' | 'FIRM'): Promise<{ subject: string; message: string }>;
+
+  /** 返回 provider 名称（用于日志和监控） */
+  getName(): string;
 }
 
 /**

@@ -84,6 +84,42 @@ ${history}
 请输出 JSON（严格按 schema）。`;
 }
 
+function buildMessagePrompt(data: AIInvoiceContext, tone: 'FRIENDLY' | 'PROFESSIONAL' | 'FIRM'): string {
+  const toneDesc = {
+    FRIENDLY: '友好、温和，适合关系良好的老客户',
+    PROFESSIONAL: '专业、正式，适合大多数商务场景',
+    FIRM: '坚定、严肃，适合长期逾期或多次催收无效的情况',
+  }[tone];
+
+  const history = data.customer_history
+    ? `\n## 客户历史行为\n- 平均付款天数: ${data.customer_history.average_payment_days ?? '未知'}天\n- 趋势: ${data.customer_history.payment_trend}\n- 行为标签: ${data.customer_history.payment_behavior}\n- 历史逾期率: ${data.customer_history.historical_overdue_rate}%\n`
+    : '\n## 客户历史行为\n- 无历史数据\n';
+
+  return `请为以下应收账款生成催款消息草稿。
+
+## 背景信息
+- 客户名称: ${data.customer_name}
+- 发票号: ${data.invoice_number ?? '未知'}
+- 未收金额: ${data.outstanding_amount}
+- 逾期天数: ${data.days_overdue}天
+- 优先级: ${data.priority_level} (${data.priority_score}/100)
+- 程序分析原因: ${data.reason}
+
+${history}
+
+## 语气要求
+请使用 ${tone} 的语气：${toneDesc}
+
+## 约束
+1. 只能使用提供的数据，禁止虚构客户没有的付款承诺或历史记录
+2. 不得进行法律威胁或给出法律结论
+3. 消息以"您好"或合适的称呼开头
+4. 消息长度控制在200字以内
+5. 输出格式：{"subject":"邮件/消息标题","message":"正文内容"}
+
+输出 JSON。`;
+}
+
 export class OpenRouterProvider implements AIProvider {
   private client: OpenAI;
   private model: string;
@@ -101,6 +137,10 @@ export class OpenRouterProvider implements AIProvider {
 
   isConfigured(): boolean {
     return !!process.env.OPENROUTER_API_KEY;
+  }
+
+  getName(): string {
+    return 'openrouter';
   }
 
   async analyzeReport(data: AIReportContext): Promise<AiReportAnalysis> {
@@ -153,6 +193,34 @@ export class OpenRouterProvider implements AIProvider {
     }
   }
 
+  async generateCollectionMessage(
+    data: AIInvoiceContext,
+    tone: 'FRIENDLY' | 'PROFESSIONAL' | 'FIRM' = 'PROFESSIONAL'
+  ): Promise<{ subject: string; message: string }> {
+    if (!this.isConfigured()) {
+      console.warn('[AI] OPENROUTER_API_KEY 未配置，使用 fallback 消息');
+      return getFallbackCollectionMessage(data, tone);
+    }
+
+    try {
+      const response = await this.client.chat.completions.create({
+        model: this.model,
+        messages: [
+          { role: 'system', content: buildSystemPrompt() },
+          { role: 'user', content: buildMessagePrompt(data, tone) },
+        ],
+        max_tokens: MAX_TOKENS,
+        temperature: 0.7,
+      });
+
+      const raw = response.choices[0]?.message?.content?.trim() ?? '';
+      return this.parseMessageResponse(raw);
+    } catch (err) {
+      console.error('[AI] generateCollectionMessage 失败:', err);
+      return getFallbackCollectionMessage(data, tone);
+    }
+  }
+
   private parseResponse(raw: string, schema: any, fnName: string): any {
     // 尝试提取 JSON（有些模型可能包在 ```json ... ``` 里）
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
@@ -168,6 +236,64 @@ export class OpenRouterProvider implements AIProvider {
     const result = schema.parse(parsed);
     return result;
   }
+
+  private parseMessageResponse(raw: string): { subject: string; message: string } {
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    const jsonStr = jsonMatch ? jsonMatch[0] : raw;
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(jsonStr);
+    } catch (e) {
+      throw new AIProviderError('openrouter', e, `generateCollectionMessage JSON 解析失败: ${jsonStr.slice(0, 200)}`);
+    }
+
+    // Zod-like validation (manual for this structure)
+    if (typeof parsed !== 'object' || parsed === null) {
+      throw new AIProviderError('openrouter', 'invalid response', '返回数据不是对象');
+    }
+    const p = parsed as Record<string, unknown>;
+    if (typeof p.subject !== 'string' || typeof p.message !== 'string') {
+      throw new AIProviderError('openrouter', 'invalid fields', '缺少 subject 或 message 字段');
+    }
+
+    return {
+      subject: p.subject as string,
+      message: p.message as string,
+    };
+  }
+}
+
+// ─── 催款消息 Fallback ────────────────────────────────────────────────────────
+
+function getFallbackCollectionMessage(
+  data: AIInvoiceContext,
+  tone: 'FRIENDLY' | 'PROFESSIONAL' | 'FIRM'
+): { subject: string; message: string } {
+  const amount = data.outstanding_amount;
+  const days = data.days_overdue;
+  const customer = data.customer_name;
+  const invoice = data.invoice_number || '相关发票';
+
+  if (tone === 'FRIENDLY') {
+    return {
+      subject: `温馨提醒：${customer}账款`,
+      message: `您好！我们注意到${invoice}（${amount}）尚未收到付款，已逾期${days}天。如您已付款，请忽略此消息。如有任何问题，欢迎随时联系我们。`,
+    };
+  }
+
+  if (tone === 'FIRM') {
+    return {
+      subject: `紧急：${customer}账款逾期${days}天`,
+      message: `您好，${invoice}（${amount}）已逾期${days}天，远超正常账期。请尽快安排付款，以免产生额外费用。如已安排，请提供付款凭证。`,
+    };
+  }
+
+  // PROFESSIONAL（默认）
+  return {
+    subject: `账款提醒：${customer}`,
+    message: `您好！我们提醒一下，${invoice}（${amount}）目前尚未结清，已逾期${days}天。请您尽快安排付款，或与我们联系确认付款进度。感谢您的配合。`,
+  };
 }
 
 // ─── 模拟 Provider（测试用）─────────────────────────────────────────────────
@@ -180,6 +306,10 @@ export class MockAIProvider implements AIProvider {
       throwErr?: Error;
     } = {}
   ) {}
+
+  getName(): string {
+    return 'mock';
+  }
 
   async analyzeReport(_data: AIReportContext): Promise<AiReportAnalysis> {
     if (this.options.throwErr) throw this.options.throwErr;
@@ -202,5 +332,13 @@ export class MockAIProvider implements AIProvider {
       message_tone: 'PROFESSIONAL' as const,
       ...this.options.invoice,
     };
+  }
+
+  async generateCollectionMessage(
+    _data: AIInvoiceContext,
+    tone: 'FRIENDLY' | 'PROFESSIONAL' | 'FIRM' = 'PROFESSIONAL'
+  ): Promise<{ subject: string; message: string }> {
+    if (this.options.throwErr) throw this.options.throwErr;
+    return getFallbackCollectionMessage(_data, tone);
   }
 }
