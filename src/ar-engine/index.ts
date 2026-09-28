@@ -1,11 +1,20 @@
 import { DecimalMoney } from '../lib/decimal';
 import { NormalizedInvoice } from '../data-normalizer';
+import {
+  PaymentHistoryAnalysis,
+  PaymentTrend,
+  PaymentDaySample,
+  analyzePaymentHistory,
+} from '../payment-history';
 
 // 账龄区间
 export type AgingBucket = 'CURRENT' | '1-7' | '8-30' | '31-60' | '61-90' | '90+';
 
-// 支付趋势
-export type PaymentTrend = 'IMPROVING' | 'STABLE' | 'DETERIORATING' | 'UNKNOWN';
+// 支付趋势（重新导出以保持 Phase 1 下游导入兼容）
+export type { PaymentTrend };
+
+// 客户支付历史（key = 客户名称）
+export type CustomerPaymentHistory = Record<string, PaymentHistoryAnalysis>;
 
 // 客户聚合数据
 export interface CustomerAggregation {
@@ -19,6 +28,8 @@ export interface CustomerAggregation {
   median_payment_days: number | null;
   max_days_overdue: number;
   payment_trend: PaymentTrend;
+  // Phase 2 新增：完整支付历史分析
+  payment_history?: PaymentHistoryAnalysis;
 }
 
 // 账龄分布
@@ -50,7 +61,10 @@ export function getAgingBucket(daysOverdue: number): AgingBucket {
 }
 
 // 计算AR健康报告
-export function calculateARHealth(invoices: NormalizedInvoice[]): ARHealthReport {
+export function calculateARHealth(
+  invoices: NormalizedInvoice[],
+  paymentHistory: CustomerPaymentHistory = {} // Phase 2: 可选，传入客户支付历史
+): ARHealthReport {
   const totalReceivables = invoices.reduce(
     (sum, inv) => sum.add(inv.outstanding_amount),
     DecimalMoney.fromString('0')
@@ -110,19 +124,22 @@ export function calculateARHealth(invoices: NormalizedInvoice[]): ARHealthReport
     const totalOverdue = custInvoices
       .filter(inv => inv.is_overdue)
       .reduce((sum, inv) => sum.add(inv.outstanding_amount), DecimalMoney.fromString('0'));
-    
+
     const maxDaysOverdue = Math.max(...custInvoices.map(inv => inv.days_overdue), 0);
 
+    // Phase 2: 从支付历史填充真实数据
+    const hist = paymentHistory[name];
     return {
       customer_name: name,
       total_outstanding: totalOutstanding,
       total_overdue: totalOverdue,
       invoice_count: custInvoices.length,
       overdue_invoice_count: custInvoices.filter(inv => inv.is_overdue).length,
-      average_payment_days: null, // Phase 2: 接入 payment_records 后填充
-      median_payment_days: null,  // Phase 2: 接入 payment_records 后填充
+      average_payment_days: hist?.average_payment_days ?? null,
+      median_payment_days: hist?.median_payment_days ?? null,
       max_days_overdue: maxDaysOverdue,
-      payment_trend: 'UNKNOWN',
+      payment_trend: hist?.payment_trend ?? 'UNKNOWN',
+      payment_history: hist ?? null,
     };
   });
 

@@ -29,13 +29,17 @@ describe('Priority Engine', () => {
     expect(priority.priority_score).toBe(Math.round(100*0.35 + 14*0.25 + 40*0.20 + 40*0.20));
     // 无历史数据时 (UNKNOWN=40)，单客户发票最高分上限 76，55 为 MEDIUM
     expect(priority.priority_level).toBe('MEDIUM');
-      
+
     // 有历史数据（经常延迟+恶化趋势）应能推高到 MEDIUM+
     const historyAgg = {
-      average_payment_days: 75,
-      payment_trend: 'DETERIORATING' as const,
-    };
-    const highPriority = calculatePriorityScore(target, totalOutstanding, historyAgg as any);
+      payment_history: {
+        average_payment_days: 75,
+        historical_overdue_rate: 100,
+        total_payments: 1,
+        payment_trend: 'DETERIORATING',
+      } as any,
+    } as any;
+    const highPriority = calculatePriorityScore(target, totalOutstanding, historyAgg);
     // 100*0.35 + 14*0.25 + 90*0.20 + 80*0.20 = 35 + 3.5 + 18 + 16 = 72.5 ≈ 73
     expect(highPriority.priority_score).toBeGreaterThanOrEqual(70);
     expect(highPriority.priority_level).toBe('MEDIUM');

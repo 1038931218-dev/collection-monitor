@@ -1,0 +1,65 @@
+// Prisma Schema — AI收款管家 V0.1
+// 数据库：PostgreSQL（正式）。Phase 2 仅定义 Schema，暂不建库。
+// 金额统一使用 Int 分（cents）存储，保证精确性，禁止使用 Float。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id            String         @id @default(cuid())
+  name          String
+  slug          String         @unique // 标准化后的小写名称，用于匹配
+  contact_email String?
+  contact_phone String?
+  notes         String?
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+
+  invoices       Invoice[]
+  paymentRecords PaymentRecord[]
+}
+
+model Invoice {
+  id                 String    @id @default(cuid())
+  customer_id        String
+  customer           Customer  @relation(fields: [customer_id], references: [id])
+  invoice_number     String?
+  invoice_date       DateTime
+  due_date           DateTime
+  amount_cents       Int       // 发票总金额（分）
+  paid_amount_cents  Int       @default(0) // 累计已付金额（分）
+  currency           String    @default("USD")
+  status             String    @default("UNPAID") // UNPAID | PARTIALLY_PAID | PAID | OVERDUE
+  paid_date          DateTime? // 最后一笔付款日期（可由 payment_records 推导）
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  paymentRecords PaymentRecord[]
+
+  @@index([customer_id])
+  @@index([invoice_number, customer_id])
+  @@index([due_date])
+}
+
+model PaymentRecord {
+  id            String   @id @default(cuid())
+  invoice_id    String?
+  invoice       Invoice? @relation(fields: [invoice_id], references: [id])
+  customer_id   String
+  customer      Customer @relation(fields: [customer_id], references: [id])
+  payment_date   DateTime // 实际付款日期
+  amount_cents   Int      // 本次付款金额（分）
+  currency        String   @default("USD")
+  payment_method  String?  // bank_transfer | cash | check | credit_card | other
+  notes           String?
+  created_at      DateTime @default(now())
+
+  @@index([customer_id, payment_date])
+  @@index([invoice_id, payment_date])
+}

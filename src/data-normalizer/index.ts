@@ -13,6 +13,8 @@ export interface NormalizedInvoice {
   days_overdue: number;
   status: InvoiceStatus;
   currency: string;
+  /** 最后一笔付款日期；由原始数据或 payment_records 推导填充 */
+  paid_date?: Date;
 }
 
 export type InvoiceStatus = 'PAID' | 'PARTIALLY_PAID' | 'UNPAID' | 'OVERDUE' | 'UNKNOWN';
@@ -57,6 +59,7 @@ export function normalizeInvoice(invoice: InvoiceData): NormalizedInvoice | null
     days_overdue: daysOverdue,
     status,
     currency: invoice.currency || 'USD',
+    paid_date: invoice.paid_date, // Phase 2: 传递最后一笔付款日期
   };
 }
 
