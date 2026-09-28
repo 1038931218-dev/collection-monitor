@@ -51,4 +51,20 @@ export abstract class BaseRepository {
       throw new CrossTenantError(action, companyId, rowId);
     }
   }
+
+  /**
+   * 只返回属于该公司的记录，不属于则视为 NotFound（绝不泄漏他司数据）。
+   * @returns 记录或 null
+   */
+  protected async findOwnedRow<T extends { company_id: string }>(
+    fetch: () => Promise<T | null>,
+    companyId: string,
+    action: string,
+    label: string
+  ): Promise<T | null> {
+    const row = await fetch();
+    if (!row) return null;
+    this.assertCompanyOwnership(row, companyId, action, label);
+    return row;
+  }
 }
