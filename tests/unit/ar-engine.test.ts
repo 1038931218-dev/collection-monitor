@@ -76,12 +76,56 @@ describe('AR Engine', () => {
 
   test('多次运行结果应该一致', () => {
     const invoices = generateTestInvoices();
-    
+
     const result1 = calculateARHealth(normalizeInvoices(invoices));
     const result2 = calculateARHealth(normalizeInvoices(invoices));
-    
+
     expect(result1.total_receivables.cents).toBe(result2.total_receivables.cents);
     expect(result1.overdue_amount.cents).toBe(result2.overdue_amount.cents);
     expect(result1.overdue_ratio).toBe(result2.overdue_ratio);
   });
+});
+
+describe('Aging Boundary Tests', () => {
+  function makeInvoice(opts: { customer_name: string; amount: number; due_days_ago: number }): import('../../src/data-normalizer').NormalizedInvoice {
+    const today = new Date('2026-09-28');
+    const invoice_date = new Date(today.getTime() - 60 * 24 * 60 * 60 * 1000);
+    const due_date = new Date(today.getTime() - opts.due_days_ago * 24 * 60 * 60 * 1000);
+    return {
+      customer_name: opts.customer_name,
+      invoice_number: 'TEST-001',
+      invoice_date,
+      due_date,
+      amount: new (require('../../src/lib/decimal').DecimalMoney)(opts.amount * 100),
+      paid_amount: new (require('../../src/lib/decimal').DecimalMoney)(0),
+      outstanding_amount: new (require('../../src/lib/decimal').DecimalMoney)(opts.amount * 100),
+      is_overdue: opts.due_days_ago > 0,
+      days_overdue: opts.due_days_ago,
+      status: opts.due_days_ago > 0 ? 'OVERDUE' : 'UNPAID',
+      currency: 'USD',
+    };
+  }
+
+  const boundaryCases = [
+    { days: 0,    expected: 'CURRENT' },
+    { days: 1,    expected: '1-7' },
+    { days: 7,    expected: '1-7' },
+    { days: 8,    expected: '8-30' },
+    { days: 30,   expected: '8-30' },
+    { days: 31,   expected: '31-60' },
+    { days: 60,   expected: '31-60' },
+    { days: 61,   expected: '61-90' },
+    { days: 90,   expected: '61-90' },
+    { days: 91,   expected: '90+' },
+    { days: 120,  expected: '90+' },
+  ];
+
+  for (const c of boundaryCases) {
+    test(`days_overdue=${c.days} → bucket=${c.expected}`, () => {
+      const inv = makeInvoice({ customer_name: 'Boundary', amount: 1000, due_days_ago: c.days });
+      const report = calculateARHealth([inv]);
+      const bucket = report.aging_distribution.find(b => b.amount.cents > 0);
+      expect(bucket!.bucket).toBe(c.expected);
+    });
+  }
 });

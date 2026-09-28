@@ -1,0 +1,125 @@
+{
+  "metadata": {
+    "generated_at": "2026-09-28T15:32:17.818Z",
+    "total_invoices": 11,
+    "total_customers": 10
+  },
+  "risk_metrics": {
+    "total_receivables": "$718,300.00",
+    "overdue_amount": "$208,300.00",
+    "overdue_ratio": "29.0%",
+    "avg_days_overdue": 33,
+    "max_days_overdue": 100
+  },
+  "aging_distribution": [
+    {
+      "bucket": "CURRENT",
+      "amount": "$510,000.00",
+      "percentage": "71.0%"
+    },
+    {
+      "bucket": "1-7",
+      "amount": "$5,500.00",
+      "percentage": "0.8%"
+    },
+    {
+      "bucket": "8-30",
+      "amount": "$37,800.00",
+      "percentage": "5.3%"
+    },
+    {
+      "bucket": "31-60",
+      "amount": "$15,000.00",
+      "percentage": "2.1%"
+    },
+    {
+      "bucket": "61-90",
+      "amount": "$50,000.00",
+      "percentage": "7.0%"
+    },
+    {
+      "bucket": "90+",
+      "amount": "$100,000.00",
+      "percentage": "13.9%"
+    }
+  ],
+  "top_priority": {
+    "total_count": 5,
+    "items": [
+      {
+        "invoice_number": "INV-006",
+        "customer_name": "Old Customer",
+        "amount": "$100,000.00",
+        "paid_amount": "$0.00",
+        "outstanding_amount": "$100,000.00",
+        "days_overdue": 100,
+        "priority_level": "MEDIUM",
+        "priority_score": 55,
+        "reason": "逾期 100 天，未收金额 $100,000.00",
+        "recommended_action": "尽快跟进，建议24小时内联系"
+      },
+      {
+        "invoice_number": "INV-005",
+        "customer_name": "Mega Industries",
+        "amount": "$50,000.00",
+        "paid_amount": "$0.00",
+        "outstanding_amount": "$50,000.00",
+        "days_overdue": 75,
+        "priority_level": "LOW",
+        "priority_score": 46,
+        "reason": "逾期 75 天，未收金额 $50,000.00",
+        "recommended_action": "常规跟进，可在本周内处理"
+      },
+      {
+        "invoice_number": "INV-004",
+        "customer_name": "Tech Solutions",
+        "amount": "$15,000.00",
+        "paid_amount": "$0.00",
+        "outstanding_amount": "$15,000.00",
+        "days_overdue": 45,
+        "priority_level": "LOW",
+        "priority_score": 38,
+        "reason": "逾期 45 天，未收金额 $15,000.00",
+        "recommended_action": "常规跟进，可在本周内处理"
+      },
+      {
+        "invoice_number": "INV-011",
+        "customer_name": "Big Client",
+        "amount": "$500,000.00",
+        "paid_amount": "$0.00",
+        "outstanding_amount": "$500,000.00",
+        "days_overdue": 0,
+        "priority_level": "LOW",
+        "priority_score": 34,
+        "reason": "未收金额 $500,000.00",
+        "recommended_action": "常规跟进，可在本周内处理"
+      },
+      {
+        "invoice_number": "INV-003",
+        "customer_name": "Global Trading",
+        "amount": "$25,000.00",
+        "paid_amount": "$0.00",
+        "outstanding_amount": "$25,000.00",
+        "days_overdue": 15,
+        "priority_level": "LOW",
+        "priority_score": 27,
+        "reason": "逾期 15 天，未收金额 $25,000.00",
+        "recommended_action": "常规跟进，可在本周内处理"
+      }
+    ]
+  },
+  "ai_analysis": {
+    "summary": "当前应收账款$718,300.00，逾期29.0%。建议重点关注0个高风险账户和1个中风险账户。",
+    "risk_assessment": "中风险：逾期比例超过15%，建议加强催收力度",
+    "key_findings": [
+      "逾期金额: $208,300.00",
+      "当前到期金额: $510,000.00",
+      "90天以上逾期: $100,000.00"
+    ],
+    "recommendations": [
+      "本周内处理1个中风险账户",
+      "定期检查应收账款账龄分布",
+      "与客户建立良好的沟通机制"
+    ]
+  }
+}
