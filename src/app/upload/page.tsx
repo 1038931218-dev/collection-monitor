@@ -31,8 +31,8 @@ export default function UploadPage() {
 
   const validateFile = (file: File): string | null => {
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-    if (!ALLOWED_EXT.includes(ext)) return '不支持的文件格式，请上传 .csv / .xlsx / .xls';
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) return `文件太大（${(file.size / 1024 / 1024).toFixed(1)} MB），最大 ${MAX_SIZE_MB} MB`;
+    if (!ALLOWED_EXT.includes(ext)) return 'Unsupported format. Please upload .csv / .xlsx / .xls';
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) return `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max ${MAX_SIZE_MB} MB`;
     return null;
   };
 
@@ -50,25 +50,25 @@ export default function UploadPage() {
       });
       if (!resp.ok) {
         const j = await resp.json();
-        throw new Error(j.error || '上传失败');
+        throw new Error(j.error || 'Upload failed');
       }
       const j: ParsedData = await resp.json();
       if (j.errors && j.errors.length > 0) {
-        setError(j.errors.slice(0, 3).join('；'));
+        setError(j.errors.slice(0, 3).join('; '));
         return;
       }
       if (j.invoices.length === 0) {
-        setError('未检测到有效发票数据，请检查文件内容。');
+        setError('No valid invoice data detected. Please check your file content.');
         return;
       }
       if (j.invoices.length > MAX_ROWS) {
-        setError(`超过 ${MAX_ROWS} 行限制，请拆分文件后重新上传。`);
+        setError(`Exceeds ${MAX_ROWS} row limit. Please split the file and re-upload.`);
         return;
       }
       sessionStorage.setItem('parsedInvoices', JSON.stringify(j));
       router.push('/mapping');
     } catch (e: any) {
-      setError(e.message || '上传失败，请重试');
+      setError(e.message || 'Upload failed, please try again');
       setState('idle');
     }
   };
@@ -80,9 +80,9 @@ export default function UploadPage() {
 
   return (
     <div className="container" style={{maxWidth:640, paddingTop:40}}>
-      <nav className="topnav"><span className="brand">AI收款管家</span><a href="/">首页</a></nav>
-      <h1 style={{marginBottom:6}}>上传应收账款文件</h1>
-      <p className="lead" style={{marginBottom:28}}>支持 CSV、Excel (.xlsx / .xls)，最大 10MB</p>
+      <nav className="topnav"><span className="brand">AI Collection Manager</span><a href="/">Home</a></nav>
+      <h1 style={{marginBottom:6}}>Upload AR File</h1>
+      <p className="lead" style={{marginBottom:28}}>Supports CSV, Excel (.xlsx / .xls), max 10MB</p>
 
       {error && <div className="alert alert-error">{error}</div>}
 
@@ -103,19 +103,19 @@ export default function UploadPage() {
       >
         <div style={{fontSize:40, marginBottom:12}}>📁</div>
         <div style={{fontSize:17, fontWeight:600, marginBottom:6}}>
-          {state === 'uploading' ? '正在解析...' : '点击或拖拽文件到此处'}
+          {state === 'uploading' ? 'Processing...' : 'Click or drag file here'}
         </div>
         <div style={{fontSize:13, color:'var(--text-dim)'}}>
-          {state === 'uploading' ? '' : `${ALLOWED_EXT.join(' / ')} 格式，≤${MAX_SIZE_MB}MB，≤${MAX_ROWS}行`}
+          {state === 'uploading' ? '' : `${ALLOWED_EXT.join(' / ')} format, ≤${MAX_SIZE_MB}MB, ≤${MAX_ROWS} rows`}
         </div>
       </div>
       <input ref={fileRef} type="file" accept=".csv,.xlsx,.xls" style={{display:'none'}} onChange={onChange} />
 
       <div style={{marginTop:24, display:'flex', gap:10, alignItems:'center'}}>
-        <span style={{fontSize:14, color:'var(--text-dim)'}}>想先看效果？</span>
+        <span style={{fontSize:14, color:'var(--text-dim)'}}>Want to see a demo?</span>
         <button className="btn btn-secondary" style={{fontSize:13, padding:'8px 14px'}}
           onClick={() => { sessionStorage.removeItem('parsedInvoices'); router.push('/demo'); }}>
-          查看示例
+          View Demo
         </button>
       </div>
     </div>

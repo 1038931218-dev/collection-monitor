@@ -3,28 +3,28 @@ export default function LandingPage() {
     <div className="container" style={{paddingTop: 48, paddingBottom: 64}}>
       {/* hero */}
       <div style={{textAlign:'center', marginBottom: 56}}>
-        <div style={{fontSize:13, color:'var(--accent)', textTransform:'uppercase', letterSpacing:2, marginBottom:10}}>AI收款管家</div>
+        <div style={{fontSize:13, color:'var(--accent)', textTransform:'uppercase', letterSpacing:2, marginBottom:10}}>AI Collection Manager</div>
         <h1 style={{fontSize:48, fontWeight:800, lineHeight:1.15, marginBottom:18}}>
-          每天告诉你<br/>哪笔钱最该收
+          Know Which Invoice<br/>to Chase Today
         </h1>
         <p style={{color:'var(--text-dim)', fontSize:18, maxWidth:520, margin:'0 auto 32px'}}>
-          上传 Excel/CSV，立刻得到今天的收款优先级报告。<br/>不需要懂财务，不需要复杂配置。
+          Upload your AR Excel/CSV and get today's collection priority report.<br/>No finance background needed. No complex setup.
         </p>
         <a href="/upload" className="btn btn-primary" style={{fontSize:17, padding:'14px 30px'}}>
-          免费检查我的应收账款 →
+          Check My Receivables Free →
         </a>
         <p style={{marginTop:14, fontSize:13, color:'var(--text-dim)'}}>
-          已有 12,000+ 企业使用 · 支持 CSV / XLSX · 100% 本地计算
+          Trusted by 12,000+ businesses · CSV / XLSX supported · 100% local processing
         </p>
       </div>
 
       {/* how it works */}
-      <h2 style={{textAlign:'center', marginBottom:28}}>三步搞定</h2>
+      <h2 style={{textAlign:'center', marginBottom:28}}>How It Works</h2>
       <div className="stat-grid" style={{marginBottom:64}}>
         {[
-          { n:'1', title:'上传文件', desc:'支持 Excel 和 CSV，自动识别字段' },
-          { n:'2', title:'AI 分析', desc:'程序计算优先级，AI 帮你做决策判断' },
-          { n:'3', title:'查看报告', desc:'看到 Top 5 优先收款任务，生成催款话术' },
+          { n:'1', title:'Upload File', desc:'Supports Excel and CSV with automatic field detection' },
+          { n:'2', title:'AI Analysis', desc:'Program calculates priority, AI helps you decide' },
+          { n:'3', title:'View Report', desc:'See Top 5 collection tasks with AI-powered messages' },
         ].map(c => (
           <div key={c.n} className="card" style={{textAlign:'center'}}>
             <div style={{fontSize:36, fontWeight:800, color:'var(--accent)', marginBottom:4}}>{c.n}</div>
@@ -36,8 +36,8 @@ export default function LandingPage() {
 
       {/* privacy */}
       <div style={{textAlign:'center', color:'var(--text-dim)', fontSize:14, borderTop:'1px solid var(--border)', paddingTop:32}}>
-        <div style={{marginBottom:8, fontSize:15, color:'var(--text)'}}>🔒 隐私与数据安全</div>
-        <div>您的数据仅在本地处理，不会上传到第三方服务器。AI 分析在您的服务器上完成。</div>
+        <div style={{marginBottom:8, fontSize:15, color:'var(--text)'}}>🔒 Privacy & Data Security</div>
+        <div>Your data is processed locally and never uploaded to third-party servers. AI analysis runs on your server.</div>
       </div>
     </div>
   );

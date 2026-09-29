@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     };
 
     if (!invoices || invoices.length === 0) {
-      return NextResponse.json({ error: '没有发票数据' }, { status: 400 });
+      return NextResponse.json({ error: 'No invoice data provided' }, { status: 400 });
     }
 
     // 转换为内部格式
@@ -108,8 +108,8 @@ export async function POST(req: NextRequest) {
       } catch {
         aiFailure++;
         result = {
-          summary: `账款分析：${task.invoice.customer_name}，逾期 ${task.invoice.days_overdue} 天`,
-          reason: task.reason || '程序判定优先级',
+          summary: `AR Analysis: ${task.invoice.customer_name}, ${task.invoice.days_overdue} days overdue`,
+          reason: task.reason || 'Priority determined by program',
           recommended_action: task.invoice.days_overdue >= 60 ? 'follow_up_now' as const : 'follow_up_later' as const,
           recommended_timing: task.invoice.days_overdue >= 60 ? 'today' as const : 'within_3_days' as const,
           message_tone: 'PROFESSIONAL' as const,
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     console.error('[ANALYZE] 处理失败:', err instanceof Error ? err.name : 'UnknownError');
     return NextResponse.json(
-      { error: '分析处理失败，请检查数据后重试' },
+      { error: 'Analysis failed, please check data and retry' },
       { status: 500 }
     );
   }

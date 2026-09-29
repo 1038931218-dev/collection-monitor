@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     const { filename, data } = body as { filename: string; data: string };
 
     if (!data || !filename) {
-      return NextResponse.json({ error: '缺少文件或文件名' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing file or filename' }, { status: 400 });
     }
 
     // base64 → Buffer
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     // 大小限制
     if (buf.length > MAX_FILE_SIZE_BYTES) {
       return NextResponse.json(
-        { error: '文件大小超过限制（最大 10MB）' },
+        { error: 'File size exceeds limit (max 10MB)' },
         { status: 413 }
       );
     }

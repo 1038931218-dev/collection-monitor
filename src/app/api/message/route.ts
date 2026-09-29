@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const { task, tone } = body;
 
     if (!task?.invoice) {
-      return NextResponse.json({ error: '缺少任务数据' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing task data' }, { status: 400 });
     }
 
     const ctx = {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
       amount_score: task.priority?.amount_score ?? 0,
       history_score: task.priority?.history_score ?? 40,
       trend_score: task.priority?.trend_score ?? 40,
-      reason: task.reason || `逾期 ${task.invoice.days_overdue} 天`,
+      reason: task.reason || `${task.invoice.days_overdue} days overdue`,
       recommended_action: task.recommended_action || 'follow_up_later',
     };
 
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   } catch (err: unknown) {
     console.error('[MESSAGE] 处理失败:', err instanceof Error ? err.name : 'UnknownError');
     return NextResponse.json(
-      { error: '消息生成失败，请稍后重试' },
+      { error: 'Message generation failed, please try again' },
       { status: 500 }
     );
   }
