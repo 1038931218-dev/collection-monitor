@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 6.5 - Post to Reddit/HN</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; }
+        h1 { color: #333; }
+        .section { background: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        h2 { margin-top: 0; }
+        code { background: #e0e0e0; padding: 2px 6px; border-radius: 4px; }
+        button { background: #FF4500; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 20px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #e03d00; }
+        .button-group { margin: 20px 0; }
+        pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 8px; overflow-x: auto; }
+        .step { margin: 15px 0; padding: 15px; background: white; border-left: 4px solid #FF4500; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Phase 6.5 市场验证 - 发帖工具</h1>
+    
+    <div class="section">
+        <h2>帖子内容已准备好</h2>
+        <p><strong>Title:</strong></p>
+        <pre>I built a tool that tells small business owners which invoice to chase today</pre>
+        
+        <p><strong>Body:</strong></p>
+        <pre>Hey r/smallbusiness,
+
+I built Collection Monitor — a simple tool that helps small business owners decide which invoice to chase first.
+
+Upload your AR Excel/CSV and get a priority report with AI-powered insights.
+
+No finance background needed.
+
+I'm looking for feedback from actual small business owners, especially people who regularly deal with overdue invoices.
+
+https://collection-monitor-nine.vercel.app
+
+What would make this useful for you?</pre>
+    </div>
+    
+    <div class="button-group">
+        <button onclick="window.open('https://www.reddit.com/r/smallbusiness/submit', '_blank')">
+            📱 Post to Reddit r/smallbusiness
+        </button>
+        <button onclick="window.open('https://news.ycombinator.com/submitlink', '_blank')">
+            💻 Submit to Hacker News (Show HN)
+        </button>
+    </div>
+    
+    <div class="section">
+        <h2>操作步骤</h2>
+        <div class="step">
+            <strong>Step 1:</strong> 点击上面的按钮打开 Reddit 或 Hacker News 发帖页面
+        </div>
+        <div class="step">
+            <strong>Step 2:</strong> 如果未登录，请先登录账号
+        </div>
+        <div class="step">
+            <strong>Step 3:</strong> 粘贴上面的标题和正文
+        </div>
+        <div class="step">
+            <strong>Step 4:</strong> 点击提交
+        </div>
+        <div class="step">
+            <strong>Step 5:</strong> 记录发帖时间和帖子链接
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>追踪指标</h2>
+        <table border="1" cellpadding="10" style="border-collapse: collapse; width: 100%;">
+            <tr>
+                <th>指标</th>
+                <th>目标</th>
+                <th>实际</th>
+            </tr>
+            <tr><td>访问人数</td><td>≥ 10</td><td id="visits">-</td></tr>
+            <tr><td>上传人数</td><td>≥ 2</td><td id="uploads">-</td></tr>
+            <tr><td>报告生成数</td><td>≥ 1</td><td id="reports">-</td></tr>
+            <tr><td>Priority 查看数</td><td>≥ 1</td><td id="priorities">-</td></tr>
+            <tr><td>Message 生成数</td><td>≥ 1</td><td id="messages">-</td></tr>
+            <tr><td>主动反馈数</td><td>≥ 1</td><td id="feedback">-</td></tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <h2>如何查看 Analytics 数据</h2>
+        <p>在目标用户的浏览器中：</p>
+        <ol>
+            <li>按 F12 打开开发者工具</li>
+            <li>切换到 Console 标签</li>
+            <li>搜索 <code>[Analytics]</code> 查看追踪日志</li>
+        </ol>
+        <p>或查看 LocalStorage：</p>
+        <ol>
+            <li>F12 → Application → Local Storage</li>
+            <li>查找键: <code>collection_monitor_analytics</code></li>
+        </ol>
+    </div>
+    
+    <div class="section">
+        <h2>测试完成标准</h2>
+        <ul>
+            <li>✅ 至少 1 个用户完成完整闭环（上传 → 报告 → Priority → Message）</li>
+            <li>✅ 至少 1 个用户明确表示"有用"</li>
+            <li>✅ 收集到真实用户原话</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Auto-refresh every 60 seconds to check localStorage
+        setInterval(() => {
+            try {
+                const data = localStorage.getItem('collection_monitor_analytics');
+                if (data) {
+                    const events = JSON.parse(data);
+                    const counts = {
+                        page_view: events.filter(e => e.event === 'page_view').length,
+                        upload_started: events.filter(e => e.event === 'upload_started').length,
+                        upload_completed: events.filter(e => e.event === 'upload_completed').length,
+                        report_generated: events.filter(e => e.event === 'report_generated').length,
+                        priority_viewed: events.filter(e => e.event === 'priority_viewed').length,
+                        message_generated: events.filter(e => e.event === 'message_generated').length,
+                        message_copied: events.filter(e => e.event === 'message_copied').length,
+                    };
+                    
+                    document.getElementById('visits').textContent = counts.page_view || '-';
+                    document.getElementById('uploads').textContent = counts.upload_completed || '-';
+                    document.getElementById('reports').textContent = counts.report_generated || '-';
+                    document.getElementById('priorities').textContent = counts.priority_viewed || '-';
+                    document.getElementById('messages').textContent = counts.message_generated || '-';
+                    
+                    // Check for any feedback comments on social media (manual tracking)
+                    console.log('[Analytics Dashboard] Updated:', counts);
+                }
+            } catch (e) {
+                console.error('[Analytics Dashboard] Error:', e);
+            }
+        }, 60000);
+    </script>
+</body>
+</html>
