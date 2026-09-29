@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phase 6.5 - Auto Post Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #333; margin-bottom: 10px; }
+        .status { background: #e8f5e9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #4caf50; }
+        .status.error { background: #ffebee; border-left-color: #f44336; }
+        .post-section { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h2 { color: #333; margin-bottom: 15px; font-size: 18px; }
+        .button-group { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
+        button { padding: 12px 24px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .btn-primary { background: #FF4500; color: white; }
+        .btn-primary:hover { background: #e03d00; }
+        .btn-secondary { background: #007bff; color: white; }
+        .btn-secondary:hover { background: #0056b3; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        pre { background: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+        .copy-btn { background: #6c757d; color: white; padding: 6px 12px; font-size: 12px; margin-top: 10px; }
+        .copy-btn:hover { background: #5a6268; }
+        .log { background: #1e1e1e; color: #4ec9b0; padding: 15px; border-radius: 6px; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+        .metric { display: inline-block; background: #e3f2fd; padding: 10px 20px; margin: 5px; border-radius: 20px; font-size: 14px; }
+        .metric strong { color: #1976d2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Phase 6.5 Market Validation</h1>
+        <p style="color: #666; margin-bottom: 20px;">Auto Post Dashboard for Collection Monitor</p>
+        
+        <div class="status">
+            <strong>✅ 产品已就绪</strong><br>
+            产品 URL: <a href="https://collection-monitor-nine.vercel.app" target="_blank">https://collection-monitor-nine.vercel.app</a>
+        </div>
+        
+        <div class="post-section">
+            <h2>📱 Reddit r/smallbusiness 帖子</h2>
+            <p><strong>Title:</strong></p>
+            <pre id="reddit-title">I built a tool that tells small business owners which invoice to chase today</pre>
+            <button class="copy-btn" onclick="copyText('reddit-title')">📋 Copy Title</button>
+            
+            <p style="margin-top: 15px;"><strong>Body:</strong></p>
+            <pre id="reddit-body">Hey r/smallbusiness,
+
+I built Collection Monitor — a simple tool that helps small business owners decide which invoice to chase first.
+
+Upload your AR Excel/CSV and get a priority report with AI-powered insights.
+
+No finance background needed.
+
+I'm looking for feedback from actual small business owners, especially people who regularly deal with overdue invoices.
+
+https://collection-monitor-nine.vercel.app
+
+What would make this useful for you?</pre>
+            <button class="copy-btn" onclick="copyText('reddit-body')">📋 Copy Body</button>
+            
+            <div class="button-group">
+                <button class="btn-primary" onclick="openReddit()">📱 Open Reddit</button>
+            </div>
+        </div>
+        
+        <div class="post-section">
+            <h2>💻 Hacker News Show HN</h2>
+            <p><strong>Title:</strong></p>
+            <pre id="hn-title">Show HN: Collection Monitor – AR prioritization for small businesses</pre>
+            <button class="copy-btn" onclick="copyText('hn-title')">📋 Copy Title</button>
+            
+            <p style="margin-top: 15px;"><strong>URL:</strong></p>
+            <pre id="hn-url">https://collection-monitor-nine.vercel.app</pre>
+            <button class="copy-btn" onclick="copyText('hn-url')">📋 Copy URL</button>
+            
+            <p style="margin-top: 15px;"><strong>Text (optional):</strong></p>
+            <pre id="hn-text">I built a tool that helps small business owners decide which invoice to chase first. Upload your AR Excel/CSV and get a priority report with AI-powered insights.
+
+The core value proposition: "Know which invoice to chase today."
+
+Looking for feedback from small business owners who deal with AR.</pre>
+            <button class="copy-btn" onclick="copyText('hn-text')">📋 Copy Text</button>
+            
+            <div class="button-group">
+                <button class="btn-secondary" onclick="openHN()">💻 Open Hacker News</button>
+            </div>
+        </div>
+        
+        <div class="post-section">
+            <h2>📊 Analytics Tracking</h2>
+            <p>访问测试 Dashboard 查看实时数据:</p>
+            <div class="button-group">
+                <button class="btn-success" onclick="openDashboard()">📊 Open Analytics Dashboard</button>
+            </div>
+            <p style="margin-top: 15px; font-size: 13px; color: #666;">
+                在目标用户的浏览器中，按 F12 → Console，搜索 [Analytics] 查看事件日志
+            </p>
+        </div>
+        
+        <div class="post-section">
+            <h2>📝 发帖步骤</h2>
+            <ol style="margin-left: 20px; line-height: 2;">
+                <li>点击上面的按钮打开 Reddit 或 Hacker News</li>
+                <li>如果未登录，请先登录你的账号</li>
+                <li>复制标题和正文内容</li>
+                <li>粘贴到发帖页面</li>
+                <li>点击提交</li>
+                <li>记录发帖时间和帖子链接</li>
+            </ol>
+        </div>
+        
+        <div class="post-section">
+            <h2>📈 成功标准（第一阶段）</h2>
+            <ul style="margin-left: 20px; line-height: 2;">
+                <li>✅ 至少 1 个用户完成完整闭环（上传 → 报告 → Priority → Message）</li>
+                <li>✅ 至少 1 个用户明确表示"有用"</li>
+                <li>✅ 收集到真实用户原话</li>
+                <li>✅ 记录用户在哪个步骤流失</li>
+            </ul>
+        </div>
+        
+        <div class="post-section">
+            <h2>⏱️ 测试时间</h2>
+            <p>运行 <strong>24-48 小时</strong>，观察以下指标：</p>
+            <div style="margin-top: 15px;">
+                <span class="metric">访问人数: <strong id="visits">-</strong></span>
+                <span class="metric">上传人数: <strong id="uploads">-</strong></span>
+                <span class="metric">报告生成: <strong id="reports">-</strong></span>
+                <span class="metric">Priority 查看: <strong id="priorities">-</strong></span>
+                <span class="metric">Message 生成: <strong id="messages">-</strong></span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function copyText(id) {
+            const text = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('已复制到剪贴板！');
+            });
+        }
+        
+        function openReddit() {
+            window.open('https://www.reddit.com/r/smallbusiness/submit', '_blank');
+        }
+        
+        function openHN() {
+            window.open('https://news.ycombinator.com/submitlink', '_blank');
+        }
+        
+        function openDashboard() {
+            window.open('https://collection-monitor-nine.vercel.app/testing-dashboard.html', '_blank');
+        }
+        
+        // Auto-refresh every 60 seconds
+        setInterval(() => {
+            try {
+                const data = localStorage.getItem('collection_monitor_analytics');
+                if (data) {
+                    const events = JSON.parse(data);
+                    const counts = {
+                        page_view: events.filter(e => e.event === 'page_view').length,
+                        upload_completed: events.filter(e => e.event === 'upload_completed').length,
+                        report_generated: events.filter(e => e.event === 'report_generated').length,
+                        priority_viewed: events.filter(e => e.event === 'priority_viewed').length,
+                        message_generated: events.filter(e => e.event === 'message_generated').length,
+                    };
+                    
+                    document.getElementById('visits').textContent = counts.page_view || '-';
+                    document.getElementById('uploads').textContent = counts.upload_completed || '-';
+                    document.getElementById('reports').textContent = counts.report_generated || '-';
+                    document.getElementById('priorities').textContent = counts.priority_viewed || '-';
+                    document.getElementById('messages').textContent = counts.message_generated || '-';
+                }
+            } catch (e) {
+                console.error('[Dashboard] Error:', e);
+            }
+        }, 60000);
+    </script>
+</body>
+</html>
