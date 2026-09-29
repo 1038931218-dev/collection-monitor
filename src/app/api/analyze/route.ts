@@ -11,7 +11,12 @@ import { DateUtils } from '@/lib/decimal';
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    
+    if (!body) {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    
     const { invoices, topN = 5 } = body as {
       invoices: Array<{
         customer_name: string;

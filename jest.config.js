@@ -20,4 +20,7 @@ module.exports = {
       statements: 70,
     },
   },
+  // 增加超时时间以支持 PostgreSQL 远程连接
+  testTimeout: 60000,
+  hookTimeout: 60000,
 };

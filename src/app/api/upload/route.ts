@@ -8,7 +8,12 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    
+    if (!body) {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    
     const { filename, data } = body as { filename: string; data: string };
 
     if (!data || !filename) {
