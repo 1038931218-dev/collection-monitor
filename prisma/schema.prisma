@@ -37,7 +37,7 @@ model Company {
   updated_at  DateTime @updatedAt
 
   owner_id    String
-  owner       User     @relation(fields: [owner_id], references: [id])
+  owner       User     @relation(fields: [owner_id], references: [id], onDelete: Cascade)
 
   customers       Customer[]
   invoices        Invoice[]
@@ -53,7 +53,7 @@ model Company {
 model Customer {
   id            String   @id @default(cuid())
   company_id    String
-  company       Company  @relation(fields: [company_id], references: [id])
+  company       Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
   name          String
   slug          String   // 标准化小写名称，用于匹配
   contact_email String?
@@ -72,9 +72,9 @@ model Customer {
 model Invoice {
   id                 String   @id @default(cuid())
   company_id         String
-  company            Company  @relation(fields: [company_id], references: [id])
+  company            Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
   customer_id        String
-  customer           Customer @relation(fields: [customer_id], references: [id])
+  customer           Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   invoice_number     String?
   invoice_date       DateTime
   due_date           DateTime
@@ -96,9 +96,9 @@ model Invoice {
 model PaymentRecord {
   id             String   @id @default(cuid())
   company_id     String
-  company        Company  @relation(fields: [company_id], references: [id])
+  company        Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
   customer_id    String
-  customer       Customer @relation(fields: [customer_id], references: [id])
+  customer       Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   invoice_id     String?
   invoice        Invoice? @relation(fields: [invoice_id], references: [id])
   payment_date   DateTime // 实际付款日期
@@ -117,7 +117,7 @@ model PaymentRecord {
 model Upload {
   id           String   @id @default(cuid())
   company_id   String
-  company      Company  @relation(fields: [company_id], references: [id])
+  company      Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
   filename     String
   content_type String?
   file_size    Int      @default(0)
@@ -131,7 +131,7 @@ model Upload {
 model CollectionTask {
   id              String   @id @default(cuid())
   company_id      String
-  company         Company  @relation(fields: [company_id], references: [id])
+  company         Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
   invoice_id      String?
   customer_id     String?
   priority_score  Int
@@ -161,9 +161,9 @@ model AIFeedback {
 model Subscription {
   id          String   @id @default(cuid())
   user_id     String
-  user        User     @relation(fields: [user_id], references: [id])
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   company_id  String
-  company     Company  @relation(fields: [company_id], references: [id])
+  company     Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
   plan        String   @default("FREE") // FREE | PRO | ENTERPRISE
   status      String   @default("ACTIVE") // ACTIVE | CANCELED | EXPIRED
   current_period_end DateTime
