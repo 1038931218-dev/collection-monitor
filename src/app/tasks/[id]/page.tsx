@@ -80,6 +80,8 @@ export default function MessagePage({ params }: { params: { id: string } }) {
     if (!draft) return;
     await navigator.clipboard.writeText(`Subject: ${draft.subject}\n\n${draft.message}`);
     setCopied(true);
+    // Track message copied
+    track('message_copied');
     setTimeout(() => setCopied(false), 2000);
   };
 
