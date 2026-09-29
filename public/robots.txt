@@ -1,0 +1,10 @@
+# Collection Monitor - Robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://collection-monitor-nine.vercel.app/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
