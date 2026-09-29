@@ -27,7 +27,7 @@ export interface ColumnMapping {
 
 // 读取文件并解析
 export async function parseFile(file: Buffer, filename: string): Promise<ParsedFile> {
-  const errors: string[] = [];
+  let errors: string[] = [];
   let invoices: InvoiceData[] = [];
   let mapping: Record<string, string> = {};
 
@@ -163,14 +163,44 @@ async function parseExcel(file: Buffer, filename: string): Promise<{ invoices: I
 
 function detectField(header: string): string | null {
   const normalized = header.toLowerCase().trim();
-  
+
+  // 精确前缀匹配优先于子串匹配：
+  // 避免 "invoice number" 因包含子串 "invoice" 误判为 invoice_number，
+  // 避免 "amount" 被 paid_amount 的长前缀抢走，或反过来。
+  // 策略：先尝试所有别名做精确前缀匹配（alias === normalized.substring(0, alias.length)），
+  //       最长前缀胜出；若无前缀命中，再退回到子串匹配。
+  let bestField: string | null = null;
+  let bestLen = -1;
+
   for (const [standardField, aliases] of Object.entries(FIELD_MAPPINGS)) {
-    if (aliases.some(alias => normalized.includes(alias.toLowerCase()))) {
-      return standardField;
+    for (const alias of aliases) {
+      const lowerAlias = alias.toLowerCase();
+      // 精确前缀匹配（alias 是 normalized 的前缀）
+      if (normalized.startsWith(lowerAlias)) {
+        if (lowerAlias.length > bestLen) {
+          bestLen = lowerAlias.length;
+          bestField = standardField;
+        }
+      }
     }
   }
-  
-  return null;
+
+  // 若无前缀命中，退回到子串匹配（最长子串优先）
+  if (bestField === null) {
+    for (const [standardField, aliases] of Object.entries(FIELD_MAPPINGS)) {
+      for (const alias of aliases) {
+        const lowerAlias = alias.toLowerCase();
+        if (normalized.includes(lowerAlias)) {
+          if (lowerAlias.length > bestLen) {
+            bestLen = lowerAlias.length;
+            bestField = standardField;
+          }
+        }
+      }
+    }
+  }
+
+  return bestField;
 }
 
 function parseValue(field: string, value: any): any {

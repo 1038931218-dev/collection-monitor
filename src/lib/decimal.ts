@@ -128,13 +128,14 @@ export class DateUtils {
 }
 
 // 字段识别映射
+// 注意：顺序重要！更特化的字段必须放在前面，避免「已付金额」先命中 amount
 export const FIELD_MAPPINGS: Record<string, string[]> = {
   customer_name: ['customer', 'client', 'customer name', 'client name', 'buyer', 'vendor', '姓名', '客户'],
   invoice_number: ['invoice', 'invoice number', 'invoice #', 'ref', 'ref number', '发票号', '单号'],
-  invoice_date: ['invoice date', 'issued date', 'date issued', 'invoice date', '发票日期'],
+  invoice_date: ['invoice date', 'issued date', 'date issued', '发票日期'],
   due_date: ['due date', 'payment due', 'due', '到期日', '付款日'],
-  amount: ['amount', 'invoice amount', 'total', '总金额', '金额'],
   paid_amount: ['paid', 'paid amount', 'amount paid', '已付', '已付款'],
+  amount: ['amount', 'invoice amount', 'total', '总金额', '金额'],
   status: ['status', 'payment status', '状态'],
   paid_date: ['paid date', 'payment date', 'paid on', '付款日期'],
   currency: ['currency', 'currency code', '币种'],

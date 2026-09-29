@@ -8,7 +8,7 @@
  */
 
 // Provider 接口 + 错误
-export {
+export type {
   AIProvider,
   AIProviderError,
   AITimeoutError,
@@ -36,3 +36,14 @@ export { getAIProvider, setTestProvider, resetTestProvider, resetAIProvider } fr
 // 服务层（统一调用入口）
 export { AIService, aiService } from './service';
 export type { AICallStats } from './service';
+
+// 业务服务（Phase 4.3：完整 AR → AI 链路）
+export {
+  AICollectionService,
+  aiCollectionService,
+} from './collection-service';
+export type {
+  EnrichedCollectionTask,
+  AIARReport,
+  CollectionMessageDraft,
+} from './collection-service';
