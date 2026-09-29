@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { track } from '@/lib/analytics';
 
 interface RawInvoice {
   customer_name: string;
@@ -46,6 +47,8 @@ export default function MappingPage() {
   const confirm = () => {
     if (missing.length > 0) return;
     sessionStorage.setItem('confirmedInvoices', JSON.stringify(data));
+    // Track report generation started
+    track('report_generated', { invoices: data.length });
     router.push('/report');
   };
 

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { track } from '@/lib/analytics';
 
 interface InvoiceRow {
   customer_name: string;
@@ -66,6 +67,8 @@ export default function MessagePage({ params }: { params: { id: string } }) {
       const j = await resp.json();
       if (j.error) throw new Error(j.error);
       setDraft({ subject: j.subject, message: j.message, aiSuccess: j.success });
+      // Track message generated
+      track('message_generated');
     } catch (e: any) {
       setError(e.message || 'Failed to generate message');
     } finally {

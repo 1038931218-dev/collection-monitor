@@ -1,6 +1,7 @@
 'use client';
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, ChangeEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { track } from '@/lib/analytics';
 
 type State = 'idle' | 'uploading' | 'parsed';
 
@@ -40,6 +41,10 @@ export default function UploadPage() {
     setError('');
     const err = validateFile(file);
     if (err) { setError(err); return; }
+    
+    // Track upload started
+    track('upload_started', { filename: file.name, size: file.size });
+    
     setState('uploading');
     try {
       const buf = await file.arrayBuffer();
@@ -66,6 +71,8 @@ export default function UploadPage() {
         return;
       }
       sessionStorage.setItem('parsedInvoices', JSON.stringify(j));
+      // Track upload completed
+      track('upload_completed', { invoices: j.invoices.length });
       router.push('/mapping');
     } catch (e: any) {
       setError(e.message || 'Upload failed, please try again');

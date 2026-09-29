@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { track } from '@/lib/analytics';
 
 interface InvoiceRow {
   customer_name: string;
@@ -79,6 +80,10 @@ export default function ReportPage() {
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data: Report = await resp.json();
         setReport(data);
+        // Track priority viewed when report loads
+        if (data.top_tasks.length > 0) {
+          track('priority_viewed', { count: data.top_tasks.length });
+        }
       } catch (e: any) {
         setError(e.message || 'Analysis failed, please try again');
       } finally {
