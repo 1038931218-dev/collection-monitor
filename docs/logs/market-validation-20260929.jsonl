@@ -1,0 +1,6 @@
+{"timestamp": "2026-09-29T17:42:58.751668", "event": "validation_start"}
+{"timestamp": "2026-09-29T17:42:58.767288", "event": "error", "message": "No browser automation tool available"}
+{"timestamp": "2026-09-29T17:42:58.767288", "event": "error", "message": "No browser automation tool available"}
+{"timestamp": "2026-09-29T17:42:58.772294", "event": "validation_blocked", "reason": "authentication_required"}
+{"timestamp": "2026-09-29T17:47:11.578414", "event": "validation_start"}
+{"timestamp": "2026-09-29T17:47:11.578414", "event": "attempt", "platform": "reddit", "browser": "playwright"}
