@@ -128,7 +128,7 @@ export class AgnesProvider implements AIProvider {
     const apiKey = process.env.AGNES_API_KEY || '';
     this.client = new OpenAI({
       apiKey,
-      baseURL: 'https://api.sapiens.ai/v1',
+      baseURL: 'https://apihub.agnes-ai.com/v1',
       timeout: TIMEOUT_MS,
       maxRetries: 1,
     });

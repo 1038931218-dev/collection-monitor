@@ -25,9 +25,14 @@ describe('CRITICAL: Multi-tenant isolation - getById must check company_id', () 
   let invoiceA_id: string, invoiceB_id: string;
 
   beforeEach(async () => {
+    // 清理顺序必须从叶子节点到根节点（PostgreSQL 外键约束）
+    await prisma.aIFeedback.deleteMany();
+    await prisma.collectionTask.deleteMany();
     await prisma.paymentRecord.deleteMany();
     await prisma.invoice.deleteMany();
     await prisma.customer.deleteMany();
+    await prisma.upload.deleteMany();
+    await prisma.subscription.deleteMany();
     await prisma.company.deleteMany();
     await prisma.user.deleteMany();
 
@@ -50,9 +55,14 @@ describe('CRITICAL: Multi-tenant isolation - getById must check company_id', () 
   });
 
   afterEach(async () => {
+    // 清理顺序必须从叶子节点到根节点（PostgreSQL 外键约束）
+    await prisma.aIFeedback.deleteMany();
+    await prisma.collectionTask.deleteMany();
     await prisma.paymentRecord.deleteMany();
     await prisma.invoice.deleteMany();
     await prisma.customer.deleteMany();
+    await prisma.upload.deleteMany();
+    await prisma.subscription.deleteMany();
     await prisma.company.deleteMany();
     await prisma.user.deleteMany();
   });

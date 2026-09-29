@@ -11,7 +11,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // Phase 3 开发用；V0.1 生产切回 "postgresql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
