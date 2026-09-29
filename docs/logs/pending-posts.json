@@ -1,0 +1,10 @@
+[
+  {
+    "platform": "indiehackers",
+    "status": "ready_to_post",
+    "title": "I built a tool that tells small businesses which invoice to chase first",
+    "body": "I built Collection Monitor — a simple tool that helps small business owners decide which invoice to chase first.\n\nUpload your AR Excel/CSV, get a priority report with AI-powered insights.\n\nCore value: \"Know which invoice to chase today.\"\n\nWhy I built it: As a logistics worker, I see how hard it is for small businesses to manage cash flow. Overdue invoices pile up and owners don't know where to start.\n\nCurrently in early validation. Would love feedback:\n- What's missing?\n- Where did you get confused?\n- Would you use this?\n\nDemo: https://collection-monitor-nine.vercel.app\n\nThanks!",
+    "url": "https://www.indiehackers.com/post",
+    "timestamp": "2026-09-29 22:27:43"
+  }
+]
