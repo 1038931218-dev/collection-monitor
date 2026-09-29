@@ -25,6 +25,12 @@ export class CompanyRepository extends BaseRepository {
     return c;
   }
 
+  async getByIdWithOwnership(id: string, ownerId: string) {
+    const c = await this.db.company.findUnique({ where: { id, owner_id: ownerId } });
+    if (!c) throw new NotFoundError('Company', id);
+    return c;
+  }
+
   async listByOwner(ownerId: string) {
     return this.db.company.findMany({ where: { owner_id: ownerId } });
   }

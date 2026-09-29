@@ -21,8 +21,16 @@ export class CustomerRepository extends BaseRepository {
     });
   }
 
-  async getById(id: string) {
-    return this.db.customer.findUnique({ where: { id } });
+  async getById(id: string, companyId?: string) {
+    // 如果提供了 companyId，必须验证归属
+    const where = companyId ? { id, company_id: companyId } : { id };
+    const c = await this.db.customer.findUnique({ where });
+    if (!c) {
+      // 如果指定了 companyId 但查不到，说明是跨租户尝试
+      if (companyId) throw new CrossTenantError('getById Customer', companyId, id);
+      throw new NotFoundError('Customer', id);
+    }
+    return c;
   }
 
   /** 仅返回指定公司的客户 */

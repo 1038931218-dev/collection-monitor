@@ -33,9 +33,15 @@ export class InvoiceRepository extends BaseRepository {
     });
   }
 
-  async getById(id: string) {
-    const inv = await this.db.invoice.findUnique({ where: { id } });
-    if (!inv) throw new NotFoundError('Invoice', id);
+  async getById(id: string, companyId?: string) {
+    // 如果提供了 companyId，必须验证归属
+    const where = companyId ? { id, company_id: companyId } : { id };
+    const inv = await this.db.invoice.findUnique({ where });
+    if (!inv) {
+      // 如果指定了 companyId 但查不到，说明是跨租户尝试
+      if (companyId) throw new CrossTenantError('getById Invoice', companyId, id);
+      throw new NotFoundError('Invoice', id);
+    }
     return inv;
   }
 
@@ -51,7 +57,8 @@ export class InvoiceRepository extends BaseRepository {
     id: string,
     data: Partial<Pick<Prisma.InvoiceCreateInput, 'invoice_number' | 'status' | 'paid_date'>>
   ) {
-    const existing = await this.getById(id);
+    const existing = await this.getById(id, companyId);
+    if (!existing) throw new NotFoundError('Invoice', id);
     this.assertCompanyOwnership(existing, companyId, 'update Invoice', id);
     return this.db.invoice.update({ where: { id }, data });
   }
@@ -62,7 +69,8 @@ export class InvoiceRepository extends BaseRepository {
     paidAmountCents: number,
     paidDate: Date
   ) {
-    const inv = await this.getById(invoiceId);
+    const inv = await this.getById(invoiceId, companyId);
+    if (!inv) throw new NotFoundError('Invoice', invoiceId);
     this.assertCompanyOwnership(inv, companyId, 'markPaid Invoice', invoiceId);
 
     const newPaidCents = Math.min(inv.paid_amount_cents + paidAmountCents, inv.amount_cents);
