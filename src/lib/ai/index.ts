@@ -16,10 +16,12 @@ export type {
 } from './provider';
 
 // 类型 + Schema + Fallback
-export {
+export type {
   AICustomerContext,
   AIInvoiceContext,
   AIReportContext,
+} from './types';
+export {
   AiInvoiceAnalysisSchema,
   AiReportAnalysisSchema,
   AiToneSchema,

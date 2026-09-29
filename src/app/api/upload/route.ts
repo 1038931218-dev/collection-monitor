@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { parseFile } from '@/file-parser';
 import { normalizeInvoices } from '@/data-normalizer';
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -15,6 +17,14 @@ export async function POST(req: NextRequest) {
 
     // base64 → Buffer
     const buf = Buffer.from(data, 'base64');
+
+    // 大小限制
+    if (buf.length > MAX_FILE_SIZE_BYTES) {
+      return NextResponse.json(
+        { error: '文件大小超过限制（最大 10MB）' },
+        { status: 413 }
+      );
+    }
 
     // 调用现有解析器
     const parsed = await parseFile(buf, filename);
@@ -40,9 +50,11 @@ export async function POST(req: NextRequest) {
       errors: parsed.errors,
       total: normalized.length,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    // 生产环境不暴露内部错误详情
+    console.error('[UPLOAD] 处理失败:', err instanceof Error ? err.name : 'UnknownError');
     return NextResponse.json(
-      { error: `上传失败: ${err.message}` },
+      { error: '文件处理失败，请检查格式后重试' },
       { status: 500 }
     );
   }

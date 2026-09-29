@@ -184,8 +184,8 @@ describe('Phase 5.2 Part 3: Security & Isolation', () => {
         body: JSON.stringify({ invoices: hugeInvoices, topN: 5 }),
       });
       const resp = await handleAnalyze(req);
-      // 只要不崩溃抛异常就算通过，500 也是正常兜底响应
-      expect(resp.status).toBeGreaterThanOrEqual(400);
+      // 10000 条发票不应崩溃，正常返回 200（AI 可能对部分失败但整体成功）
+      expect(resp.status).toBe(200);
     });
   });
 
@@ -276,6 +276,41 @@ describe('Phase 5.2 Part 3: Security & Isolation', () => {
       expect(json.error).not.toContain('/src/');
       expect(json.error).not.toContain('at Object.');
       expect(json.error).not.toContain('stack');
+    });
+
+    test('API 错误信息不泄露 err.message 内部详情', async () => {
+      // 触发错误：非法扩展名 → parseFile 返回错误但不抛异常（返回 200 + errors）
+      // 检查返回的错误信息是否包含内部细节
+      const req = new NextRequest('http://localhost/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: 'test.exe', data: Buffer.from('MZ').toString('base64') }),
+      });
+      const resp = await handleUpload(req);
+      // 正常返回 200，但 errors 数组中应有错误信息
+      expect(resp.status).toBe(200);
+      const json = await resp.json();
+      expect(json.errors).toBeDefined();
+      expect(Array.isArray(json.errors)).toBe(true);
+      // 错误信息不应包含路径、堆栈或 API Key
+      const allErrors = json.errors.join(' ');
+      expect(allErrors).not.toContain('/src/');
+      expect(allErrors).not.toMatch(/\bsk-or-v1-/);
+      expect(allErrors).not.toContain('Error:');
+    });
+
+    test('上传超大文件（>10MB）→ 413', async () => {
+      // base64 编码：3字节 → 4字符，所以需要 ~13.3MB 的 base64 字符串才能解码出 >10MB 的 buffer
+      const largeBase64 = 'x'.repeat(Math.ceil(11 * 1024 * 1024 * 4 / 3));
+      const req = new NextRequest('http://localhost/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: 'big.csv', data: largeBase64 }),
+      });
+      const resp = await handleUpload(req);
+      expect(resp.status).toBe(413);
+      const json = await resp.json();
+      expect(json.error).toContain('10MB');
     });
 
     test('日志不泄露 API Key', async () => {

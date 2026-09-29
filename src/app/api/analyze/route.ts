@@ -7,6 +7,7 @@ import { generateCollectionTasks } from '@/priority-engine';
 import { analyzePaymentHistory, PaymentRecord } from '@/payment-history';
 import { aiService } from '@/lib/ai/service';
 import { DecimalMoney } from '@/lib/decimal';
+import { DateUtils } from '@/lib/decimal';
 
 export async function POST(req: NextRequest) {
   try {
@@ -38,7 +39,23 @@ export async function POST(req: NextRequest) {
       amount: new DecimalMoney(inv.amount * 100),
       paid_amount: inv.paid_amount ? new DecimalMoney(inv.paid_amount * 100) : new DecimalMoney(0),
       currency: inv.currency || 'USD',
-    }));
+    })).map(raw => {
+      // 补充 AR Engine 所需的计算字段（与 normalizeInvoice 保持一致）
+      const outstanding = raw.amount.subtract(raw.paid_amount);
+      const daysOverdue = raw.due_date
+        ? Math.max(0, DateUtils.daysBetween(raw.due_date, DateUtils.today()))
+        : 0;
+      const finalOutstanding = outstanding.cents < 0 ? DecimalMoney.fromString('0') : outstanding;
+      return {
+        ...raw,
+        outstanding_amount: finalOutstanding,
+        is_overdue: finalOutstanding.cents > 0 && daysOverdue > 0,
+        days_overdue: daysOverdue,
+        status: finalOutstanding.cents <= 0 ? 'PAID' as const
+          : daysOverdue > 0 ? 'OVERDUE' as const
+          : 'UNPAID' as const,
+      };
+    });
 
     // AR 健康计算
     const arHealth = calculateARHealth(normalized);
@@ -173,9 +190,10 @@ export async function POST(req: NextRequest) {
     };
 
     return NextResponse.json(report);
-  } catch (err: any) {
+  } catch (err: unknown) {
+    console.error('[ANALYZE] 处理失败:', err instanceof Error ? err.name : 'UnknownError');
     return NextResponse.json(
-      { error: `分析失败: ${err.message}` },
+      { error: '分析处理失败，请检查数据后重试' },
       { status: 500 }
     );
   }

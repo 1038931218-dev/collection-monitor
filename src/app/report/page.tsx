@@ -211,8 +211,3 @@ function TaskCard({ task, expanded, onToggle }: {
     </div>
   );
 }
-
-function timingTag(t: string) {
-  const m: Record<string, string> = { today: '今天', within_3_days: '3天内', next_week: '下周', monitor: '观察' };
-  return m[t] ?? t;
-}

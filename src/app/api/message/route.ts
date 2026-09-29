@@ -39,9 +39,10 @@ export async function POST(req: NextRequest) {
       success: result.success,
       provider: result.provider,
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    console.error('[MESSAGE] 处理失败:', err instanceof Error ? err.name : 'UnknownError');
     return NextResponse.json(
-      { error: `生成消息失败: ${err.message}` },
+      { error: '消息生成失败，请稍后重试' },
       { status: 500 }
     );
   }
