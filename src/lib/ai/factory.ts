@@ -15,12 +15,14 @@
  */
 import { AIProvider } from './provider';
 import { OpenRouterProvider, MockAIProvider } from './openrouter-provider';
+import { AgnesProvider } from './agnes-provider';
 
 // ─── Provider 注册表（新增 Provider 在此登记）──────────────────────────────
 
 const registry: Record<string, () => AIProvider> = {
   openrouter: () => new OpenRouterProvider(),
   mock: () => new MockAIProvider(),
+  agnes: () => new AgnesProvider(),
   // 示例：未来接入新加坡免费 AI API
   // 'singapore-free': () => new SingaporeFreeProvider(),
 };
