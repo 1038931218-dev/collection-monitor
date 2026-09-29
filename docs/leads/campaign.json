@@ -1,0 +1,31 @@
+{
+  "campaign_id": "CM-2026-09-30-001",
+  "campaign_name": "第一轮真实客户实验",
+  "start_date": "2026-09-30",
+  "status": "AWAITING_LEADS",
+  "target_leads": 10,
+  "group_a_target": 5,
+  "group_b_target": 5,
+  "kpi_targets": {
+    "reply_rate": "20%",
+    "visit_rate": "10%",
+    "upload_rate": "5%",
+    "interest_rate": "5%",
+    "pricing_intent": "2%",
+    "payment_intent": "1%"
+  },
+  "leads": [],
+  "statistics": {
+    "total": 0,
+    "contacted": 0,
+    "replied": 0,
+    "interested": 0,
+    "pricing_intent": 0,
+    "paid": 0,
+    "no_response": 0
+  },
+  "groups": {
+    "A_wholesale_industrial": [],
+    "B_it_software": []
+  }
+}

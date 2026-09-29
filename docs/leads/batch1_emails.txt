@@ -1,0 +1,255 @@
+# Batch 1 - 第一轮客户触达邮件
+
+## A组 - Wholesale/Industrial
+
+### 1. Wholesale Hoses (score: 92)
+**To**: support@wholesalehoses.com
+**Subject**: Quick question about your AR process
+
+```
+Hi Dan,
+
+I noticed Wholesale Hoses works with Net-30 payment terms.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+### 2. Supply Tie (score: 91)
+**To**: tschmitt@supplytie.com
+**Subject**: Quick question about your AR process
+
+```
+Hi Tyler,
+
+As a Industrial Supply / Distribution company, Supply Tie likely deals with B2B invoicing.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+### 3. Cutting Tools Outlet (score: 91)
+**To**: info@cuttingtoolsoutlet.com
+**Subject**: Quick question about your AR process
+
+```
+Hi Team,
+
+I noticed Cutting Tools Outlet works with Net-30 payment terms for wholesalers, 
+distributors, machine shops, and contractors.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+### 4. EpicRise Electronics (score: 90)
+**To**: info@epicriseelectronics.com
+**Subject**: Quick question about your AR process
+
+```
+Hi Team,
+
+I noticed EpicRise Electronics offers Net 30 for qualified accounts.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+### 5. Masterman's LLP (score: 95) ⭐ 最高优先级
+**To**: cs@mastermans.com
+**Subject**: Quick question about your AR process
+
+```
+Hi Linda,
+
+I noticed Masterman's is a family-owned industrial supply distributor with ~85 employees.
+Your Net-30 terms and large commercial customer base suggest you handle significant AR volume.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+## B组 - IT/Software/Agency
+
+### 6. DemandPDX (score: 96) ⭐ 最高优先级
+**To**: info@demandpdx.com
+**Subject**: Quick question about your AR process
+
+```
+Hi Team,
+
+I noticed DemandPDX offers Net-30 payment terms for Salesforce and Shopify projects.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+### 7. Britannia IT (score: 92)
+**To**: hello@britanniait.co.uk
+**Subject**: Quick question about your AR process
+
+```
+Hi Team,
+
+As a Managed IT Services company serving UK businesses, Britannia IT likely deals 
+with recurring B2B invoicing and Net-30 terms.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+### 8. Hanvayra (score: 91)
+**To**: info@hanvayra.com
+**Subject**: Quick question about your AR process
+
+```
+Hi Team,
+
+I noticed Hanvayra operates in IT Staffing with B2B client relationships.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+### 9. NAMYNOT (score: 88) ⚠️ 仅电话
+**To**: (855) 922-0490 (Phone only - use LinkedIn or contact form)
+**Subject**: Quick question about your AR process
+
+```
+[Contact via website form or LinkedIn]
+
+Hi Team,
+
+I noticed NAMYNOT offers Net 30 Trade Accounts for B2B marketing clients.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+### 10. CANK (score: 88)
+**To**: info@cank.co.uk
+**Subject**: Quick question about your AR process
+
+```
+Hi Team,
+
+I noticed CANK Technology handles B2B software development with Net-30-style invoicing.
+
+We built a free tool that shows which invoice to chase first — just upload 
+your AR Excel/CSV and get an instant priority report with AI insights.
+
+No signup required. Try it here: https://collection-monitor-nine.vercel.app
+
+Worth a 30-second look?
+
+Best,
+Hermes
+Collection Monitor Team
+```
+
+---
+
+## 发送追踪
+
+| # | 公司 | Group | 邮箱 | 状态 | 发送时间 | 回复 |
+|---|------|-------|------|------|----------|------|
+| 1 | Wholesale Hoses | A | support@wholesalehoses.com | ⏳ Pending | | |
+| 2 | Supply Tie | A | tschmitt@supplytie.com | ⏳ Pending | | |
+| 3 | Cutting Tools Outlet | A | info@cuttingtoolsoutlet.com | ⏳ Pending | | |
+| 4 | EpicRise Electronics | A | info@epicriseelectronics.com | ⏳ Pending | | |
+| 5 | Masterman's LLP | A | cs@mastermans.com | ⏳ Pending | | |
+| 6 | DemandPDX | B | info@demandpdx.com | ⏳ Pending | | |
+| 7 | Britannia IT | B | hello@britanniait.co.uk | ⏳ Pending | | |
+| 8 | Hanvayra | B | info@hanvayra.com | ⏳ Pending | | |
+| 9 | NAMYNOT | B | (Phone only) | ⏳ Pending | | |
+| 10 | CANK | B | info@cank.co.uk | ⏳ Pending | | |
