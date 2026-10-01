@@ -25,16 +25,16 @@ describe('CRITICAL: Multi-tenant isolation - getById must check company_id', () 
   let invoiceA_id: string, invoiceB_id: string;
 
   beforeEach(async () => {
-    // 清理顺序必须从叶子节点到根节点（PostgreSQL 外键约束）
-    await prisma.aIFeedback.deleteMany();
-    await prisma.collectionTask.deleteMany();
-    await prisma.paymentRecord.deleteMany();
-    await prisma.invoice.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.upload.deleteMany();
-    await prisma.subscription.deleteMany();
-    await prisma.company.deleteMany();
-    await prisma.user.deleteMany();
+    // 正确顺序：从叶子到根（SQLite 外键约束要求）
+    await prisma.$executeRawUnsafe('DELETE FROM "AIFeedback"');
+    await prisma.$executeRawUnsafe('DELETE FROM "CollectionTask"');
+    await prisma.$executeRawUnsafe('DELETE FROM "PaymentRecord"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Upload"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Subscription"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Invoice"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Customer"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Company"');
+    await prisma.$executeRawUnsafe('DELETE FROM "User"');
 
     repoCustomer = new CustomerRepository(prisma);
     repoInvoice = new InvoiceRepository(prisma);
@@ -55,16 +55,16 @@ describe('CRITICAL: Multi-tenant isolation - getById must check company_id', () 
   });
 
   afterEach(async () => {
-    // 清理顺序必须从叶子节点到根节点（PostgreSQL 外键约束）
-    await prisma.aIFeedback.deleteMany();
-    await prisma.collectionTask.deleteMany();
-    await prisma.paymentRecord.deleteMany();
-    await prisma.invoice.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.upload.deleteMany();
-    await prisma.subscription.deleteMany();
-    await prisma.company.deleteMany();
-    await prisma.user.deleteMany();
+    // 正确顺序：从叶子到根（SQLite 外键约束要求）
+    await prisma.$executeRawUnsafe('DELETE FROM "AIFeedback"');
+    await prisma.$executeRawUnsafe('DELETE FROM "CollectionTask"');
+    await prisma.$executeRawUnsafe('DELETE FROM "PaymentRecord"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Upload"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Subscription"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Invoice"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Customer"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Company"');
+    await prisma.$executeRawUnsafe('DELETE FROM "User"');
   });
 
   // ─── Customer Repository ────────────────────────────────────────────────

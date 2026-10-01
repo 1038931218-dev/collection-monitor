@@ -105,13 +105,17 @@ export class DateUtils {
     // MM/DD/YYYY 格式
     const mmddyyyy = str.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
     if (mmddyyyy) {
-      return new Date(`${mmddyyyy[3]}-${mmddyyyy[1]}-${mmddyyyy[2]}`);
+      const d = new Date(`${mmddyyyy[3]}-${mmddyyyy[1]}-${mmddyyyy[2]}`);
+      if (isNaN(d.getTime())) return null;  // PT-01: 掐断 NaN 污染链
+      return d;
     }
 
     // DD/MM/YYYY 格式
     const ddmmyyyy = str.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
-    if (ddmmyyyy && parseInt(ddmmyyyy[1]) <= 12) {
-      return new Date(`${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`);
+    if (ddmmyyyy) {
+      const d = new Date(`${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`);
+      if (isNaN(d.getTime())) return null;  // DD/MM/YYYY 同样防护
+      return d;
     }
 
     return null;

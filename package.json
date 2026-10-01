@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test:setup": "node scripts/test-setup.js",
+    "test:cleanup": "node scripts/test-setup.js cleanup",
+    "test": "npm run test:setup && jest && npm run test:cleanup",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "type-check": "tsc --noEmit"

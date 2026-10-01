@@ -42,11 +42,9 @@ describe('Phase 5.2 Part 3: Security & Isolation', () => {
   let invoiceB_id: string;
 
   beforeEach(async () => {
-    await prisma.paymentRecord.deleteMany();
-    await prisma.invoice.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.company.deleteMany();
-    await prisma.user.deleteMany();
+    // 使用统一清理 helper（从叶子到根）
+    const { cleanDatabase } = await import('../helpers/db-cleanup');
+    await cleanDatabase();
 
     repoCompany = new CompanyRepository(prisma);
     repoCustomer = new CustomerRepository(prisma);
@@ -70,16 +68,9 @@ describe('Phase 5.2 Part 3: Security & Isolation', () => {
   });
 
   afterEach(async () => {
-    // 清理顺序必须从叶子节点到根节点（PostgreSQL 外键约束）
-    await prisma.aIFeedback.deleteMany();
-    await prisma.collectionTask.deleteMany();
-    await prisma.paymentRecord.deleteMany();
-    await prisma.invoice.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.upload.deleteMany();
-    await prisma.subscription.deleteMany();
-    await prisma.company.deleteMany();
-    await prisma.user.deleteMany();
+    // 使用统一清理 helper
+    const { cleanDatabase } = await import('../helpers/db-cleanup');
+    await cleanDatabase();
     resetTestProvider();
   });
 

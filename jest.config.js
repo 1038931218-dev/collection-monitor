@@ -23,4 +23,22 @@ module.exports = {
   // 增加超时时间以支持 PostgreSQL 远程连接
   testTimeout: 60000,
   hookTimeout: 60000,
+  // 测试前加载 .env.test
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  // 禁用并发，避免测试间数据竞争
+  maxWorkers: 1,
+  serial: true,
+  // 测试前重新生成 Prisma Client（使用 SQLite schema）
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', {
+      tsconfig: {
+        module: 'commonjs',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        strict: true,
+        forceConsistentCasingInFileNames: true,
+        skipLibCheck: true,
+      },
+    }],
+  },
 };

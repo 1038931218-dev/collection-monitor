@@ -32,12 +32,9 @@ describe('Phase 3: Tenant Isolation', () => {
   let invoiceB_id: string;
 
   beforeEach(async () => {
-    // 每个测试前清理数据库并重建
-    await prisma.paymentRecord.deleteMany();
-    await prisma.invoice.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.company.deleteMany();
-    await prisma.user.deleteMany();
+    // 使用统一清理 helper
+    const { cleanDatabase } = await import('../helpers/db-cleanup');
+    await cleanDatabase();
 
     repoCompany = new CompanyRepository(prisma);
     repoCustomer = new CustomerRepository(prisma);
@@ -80,11 +77,16 @@ describe('Phase 3: Tenant Isolation', () => {
   });
 
   afterEach(async () => {
-    await prisma.paymentRecord.deleteMany();
-    await prisma.invoice.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.company.deleteMany();
-    await prisma.user.deleteMany();
+    // 正确顺序：从叶子到根
+    await prisma.$executeRawUnsafe('DELETE FROM "AIFeedback"');
+    await prisma.$executeRawUnsafe('DELETE FROM "CollectionTask"');
+    await prisma.$executeRawUnsafe('DELETE FROM "PaymentRecord"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Upload"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Subscription"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Invoice"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Customer"');
+    await prisma.$executeRawUnsafe('DELETE FROM "Company"');
+    await prisma.$executeRawUnsafe('DELETE FROM "User"');
   });
 
   describe('Company 隔离', () => {
