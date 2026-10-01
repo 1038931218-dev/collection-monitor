@@ -28,7 +28,9 @@ describe('Phase 5.2 Part 2: Priority / Payment History / AI Fault', () => {
       due_days_ago: number;
       paid?: number;
     }) {
-      const today = new Date('2026-09-28');
+      // 使用当前日期，确保测试不依赖系统时间
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       return {
         customer_name: opts.customer,
         invoice_number: opts.invoice_num,

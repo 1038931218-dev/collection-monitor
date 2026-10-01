@@ -25,7 +25,9 @@ export class TestClock implements Clock {
   }
 }
 
-// 默认使用系统时钟
+/**
+ * 默认使用系统时钟
+ */
 let currentClock: Clock = new SystemClock();
 
 /**
@@ -47,4 +49,12 @@ export function resetClock(): void {
  */
 export function getCurrentClock(): Clock {
   return currentClock;
+}
+
+/**
+ * 获取当前日期（截断时间部分）
+ */
+export function getToday(): Date {
+  const now = currentClock.now();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
 }

@@ -148,7 +148,9 @@ describe('Phase 5.2: Black-box / Adversarial Testing', () => {
 
   describe('AR 边界 - Aging 区间', () => {
     function makeInvoice(daysOverdue: number) {
-      const today = new Date('2026-09-28');
+      // 使用当前日期，确保测试不依赖系统时间
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       const due_date = new Date(today.getTime() - daysOverdue * 24 * 60 * 60 * 1000);
       return {
         customer_name: 'Boundary Test',

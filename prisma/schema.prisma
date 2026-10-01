@@ -1,14 +1,20 @@
-// Prisma Schema — AI收款管家 V0.1 (SQLite 测试版)
+// Prisma Schema — AI收款管家 V0.1
 //
-// 这是 PostgreSQL schema 的 SQLite 适配版
-// 运行测试前执行: npx prisma generate --schema=prisma/schema.test.prisma
+// 生产环境：PostgreSQL（Neon.tech）
+// 开发/测试环境：SQLite（本地文件）
+//
+// 切换方式：设置 DATABASE_URL 环境变量
+//   - 测试：DATABASE_URL="file:./dev.db" → SQLite
+//   - 生产：DATABASE_URL="postgresql://..." → PostgreSQL
 
 generator client {
   provider = "prisma-client-js"
 }
 
+// ─── 环境自适应数据源 ─────────────────────────────────────────
+// 测试环境使用 SQLite，生产环境使用 PostgreSQL
 datasource db {
-  provider = "sqlite"
+  provider = env("PRISMA_PROVIDER")
   url      = env("DATABASE_URL")
 }
 
@@ -52,7 +58,7 @@ model Customer {
   company_id    String
   company       Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
   name          String
-  slug          String
+  slug          String   // 标准化小写名称，用于匹配
   contact_email String?
   contact_phone String?
   notes         String?
@@ -75,11 +81,11 @@ model Invoice {
   invoice_number     String?
   invoice_date       DateTime
   due_date           DateTime
-  amount_cents       Int
-  paid_amount_cents  Int      @default(0)
+  amount_cents       Int      // 发票总金额（分）
+  paid_amount_cents  Int      @default(0) // 累计已付金额（分）
   currency           String   @default("USD")
-  status             String   @default("UNPAID")
-  paid_date          DateTime?
+  status             String   @default("UNPAID") // UNPAID | PARTIALLY_PAID | PAID | OVERDUE
+  paid_date          DateTime? // 最后一笔付款日期（可由 payment_records 推导）
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
@@ -98,10 +104,10 @@ model PaymentRecord {
   customer       Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   invoice_id     String?
   invoice        Invoice? @relation(fields: [invoice_id], references: [id])
-  payment_date   DateTime
-  amount_cents   Int
+  payment_date   DateTime // 实际付款日期
+  amount_cents   Int      // 本次付款金额（分）
   currency       String   @default("USD")
-  payment_method String?
+  payment_method String?  // bank_transfer | cash | check | credit_card | other
   notes          String?
   created_at     DateTime @default(now())
 
@@ -118,7 +124,7 @@ model Upload {
   filename     String
   content_type String?
   file_size    Int      @default(0)
-  status       String   @default("PENDING")
+  status       String   @default("PENDING") // PENDING | PARSED | FAILED
   errors       String?
   created_at   DateTime @default(now())
 
@@ -132,7 +138,7 @@ model CollectionTask {
   invoice_id      String?
   customer_id     String?
   priority_score  Int
-  priority_level  String
+  priority_level  String   // LOW | MEDIUM | HIGH
   reason          String?
   action          String?
   completed_at    DateTime?
@@ -148,7 +154,7 @@ model AIFeedback {
   company_id  String
   company     Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
   task_id     String?
-  rating      Int?
+  rating      Int?     // 1-5
   comment     String?
   created_at  DateTime @default(now())
 
@@ -161,8 +167,8 @@ model Subscription {
   user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   company_id  String
   company     Company  @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  plan        String   @default("FREE")
-  status      String   @default("ACTIVE")
+  plan        String   @default("FREE") // FREE | PRO | ENTERPRISE
+  status      String   @default("ACTIVE") // ACTIVE | CANCELED | EXPIRED
   current_period_end DateTime
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
