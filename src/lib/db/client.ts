@@ -8,8 +8,10 @@ import * as path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 
 // ─── 安全闸门：禁止测试连接生产数据库 ─────────────────────────────────────────
+// FAIL CLOSED: 任何异常都拒绝执行
 function assertSafeDatabaseUrl(url: string): void {
-  if (process.env.NODE_ENV === 'test') {
+  // 强制要求 NODE_ENV=test 时才能使用测试数据库
+  if (process.env.NODE_ENV !== 'test') {
     const productionPatterns = [
       'neon.tech',
       'postgres://',
@@ -21,12 +23,42 @@ function assertSafeDatabaseUrl(url: string): void {
     for (const pattern of productionPatterns) {
       if (url.toLowerCase().includes(pattern.toLowerCase())) {
         throw new Error(
-          `[P0-SAFETY] 测试环境检测到生产数据库连接！` +
-          `\n  DATABASE_URL: ${url.substring(0, 80)}...` +
-          `\n  请设置 .env.test 指向 SQLite，禁止测试连接生产库。`
+          `[P0-SAFETY] 生产环境检测到生产数据库连接！\n` +
+          `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
+          `  请检查 NODE_ENV 设置。`
         );
       }
     }
+    return;
+  }
+  
+  // 测试环境：禁止连接生产数据库（FAIL CLOSED）
+  const productionPatterns = [
+    'neon.tech',
+    'postgres://',
+    'postgresql://',
+    'aws.amazon.com',
+    'render.com',
+    'supabase.co',
+  ];
+  for (const pattern of productionPatterns) {
+    if (url.toLowerCase().includes(pattern.toLowerCase())) {
+      throw new Error(
+        `[P0-SAFETY] 测试环境检测到生产数据库连接！\n` +
+        `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
+        `  请设置 .env.test 指向 SQLite，禁止测试连接生产库。`
+      );
+    }
+  }
+  
+  // 测试环境必须使用 SQLite（检查文件扩展名或 sqlite 关键字）
+  const isSQLite = url.includes('sqlite') || url.endsWith('.db') || url.endsWith('/dev.db');
+  if (!isSQLite) {
+    throw new Error(
+      `[P0-SAFETY] 测试环境必须使用 SQLite！\n` +
+      `  当前 DATABASE_URL: ${url}\n` +
+      `  请设置 DATABASE_URL=file:./prisma/dev.db`
+    );
   }
 }
 
@@ -34,6 +66,7 @@ function assertSafeDatabaseUrl(url: string): void {
 function resolveDevUrl(): string {
   // 测试环境强制使用 SQLite
   if (process.env.NODE_ENV === 'test') {
+    // Windows 路径如 file:F:\... 或 file:./...
     const sqliteUrl = `file:${path.resolve(__dirname, '../../../prisma/dev.db')}`;
     assertSafeDatabaseUrl(sqliteUrl);
     return sqliteUrl;

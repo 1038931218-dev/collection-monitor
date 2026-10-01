@@ -8,6 +8,7 @@ import { analyzePaymentHistory, PaymentRecord } from '@/payment-history';
 import { aiService } from '@/lib/ai/service';
 import { DecimalMoney } from '@/lib/decimal';
 import { DateUtils } from '@/lib/decimal';
+import { StrictDate } from '@/lib/strict-date';
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,16 +36,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No invoice data provided' }, { status: 400 });
     }
 
-    // 转换为内部格式
-    const normalized = invoices.map(inv => ({
-      customer_name: inv.customer_name,
-      invoice_number: inv.invoice_number,
-      invoice_date: new Date(inv.invoice_date),
-      due_date: new Date(inv.due_date),
-      amount: new DecimalMoney(inv.amount * 100),
-      paid_amount: inv.paid_amount ? new DecimalMoney(inv.paid_amount * 100) : new DecimalMoney(0),
-      currency: inv.currency || 'USD',
-    })).map(raw => {
+    // 转换为内部格式（使用严格日期解析）
+    const rawInvoices = invoices.map(inv => {
+      const invoiceDate = StrictDate.parse(inv.invoice_date);
+      const dueDate = StrictDate.parse(inv.due_date);
+      
+      // 拒绝非法日期
+      if (!invoiceDate || !dueDate) {
+        return null;
+      }
+      
+      return {
+        customer_name: inv.customer_name,
+        invoice_number: inv.invoice_number,
+        invoice_date: invoiceDate,
+        due_date: dueDate,
+        amount: new DecimalMoney(inv.amount * 100),
+        paid_amount: inv.paid_amount ? new DecimalMoney(inv.paid_amount * 100) : new DecimalMoney(0),
+        currency: inv.currency || 'USD',
+      };
+    }).filter((r): r is NonNullable<typeof r> => r !== null);
+    
+    const normalized = rawInvoices.map(raw => {
       // 补充 AR Engine 所需的计算字段（与 normalizeInvoice 保持一致）
       const outstanding = raw.amount.subtract(raw.paid_amount);
       const daysOverdue = raw.due_date

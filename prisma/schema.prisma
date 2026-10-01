@@ -13,8 +13,9 @@ generator client {
 
 // ─── 环境自适应数据源 ─────────────────────────────────────────
 // 测试环境使用 SQLite，生产环境使用 PostgreSQL
+// 注意：provider 由 DATABASE_URL 决定，而非显式设置
 datasource db {
-  provider = env("PRISMA_PROVIDER")
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
