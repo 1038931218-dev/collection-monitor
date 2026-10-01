@@ -25,7 +25,11 @@ export class StrictDate {
     // 如果是数字，验证是否是合法的Excel序列号（1-2958465）
     if (typeof input === 'number') {
       if (input <= 0 || input > 2958465) return null;
-      const d = new Date(input * 86400000 + 2208988800000); // Excel 到 JS 时间戳转换
+      // Excel序列号转换：从1900-01-01开始的天数
+      // 1900-01-01 = Excel序列号1
+      // Unix Epoch 1970-01-01 = Excel序列号25569
+      const unixTimestamp = (input - 25569) * 86400 * 1000;
+      const d = new Date(unixTimestamp);
       return isNaN(d.getTime()) ? null : d;
     }
 
