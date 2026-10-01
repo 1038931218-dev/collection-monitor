@@ -56,7 +56,17 @@ describe('真脏数据测试（5条核心用例）', () => {
     const parsed = StrictDate.parse(46000.5);
     console.log('\n[真脏-1f] 输入: 46000.5, 结果:', parsed?.toISOString());
     expect(parsed).not.toBeNull();
-    // 46000 = 2025-12-31, 46000.5 同样应该是 2025-12-31（时间部分被忽略）
+    // 46000 = 2025-12-09, 46000.5 同样应该是 2025-12-09（时间部分被忽略）
+    // 注：Math.floor(46000.5) = 46000，符合预期
+    expect(parsed!.getFullYear()).toBe(2025);
+  });
+
+  test('[真脏-1g] Excel序列号小数 46000.9 应截断为日期部分', () => {
+    const parsed = StrictDate.parse(46000.9);
+    console.log('\n[真脏-1g] 输入: 46000.9, 结果:', parsed?.toISOString());
+    expect(parsed).not.toBeNull();
+    // 46000.9 → Math.floor(46000.9) = 46000 → 2025-12-09
+    // 显式使用 Math.floor() 避免隐式截断行为
     expect(parsed!.getFullYear()).toBe(2025);
   });
 

@@ -28,7 +28,15 @@ export class StrictDate {
       // Excel序列号转换：从1900-01-01开始的天数
       // 1900-01-01 = Excel序列号1
       // Unix Epoch 1970-01-01 = Excel序列号25569
-      const unixTimestamp = (input - 25569) * 86400 * 1000;
+      //
+      // ⚠️ Excel 1900日期系统边界问题（Known Limitation）：
+      // - Excel 错误地将1900年视为闰年，导致：
+      //   * 序列号 1 = 1899-12-31（非 1900-01-01）
+      //   * 序列号 60 = 1900-02-29（该日期不存在）
+      //   * 序列号 61 = 1900-03-01
+      // - 实际使用中，Excel 文件通常从序列号 1 开始，对应 1899-12-31
+      // - 本实现遵循标准转换公式，保留此历史兼容性
+      const unixTimestamp = (Math.floor(input) - 25569) * 86400 * 1000;
       const d = new Date(unixTimestamp);
       return isNaN(d.getTime()) ? null : d;
     }
