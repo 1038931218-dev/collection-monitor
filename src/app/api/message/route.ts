@@ -4,6 +4,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { aiService } from '@/lib/ai/service';
 import { getAIProvider } from '@/lib/ai/factory';
 
+// Tone 白名单：防止注入
+const VALID_TONES = ['FRIENDLY', 'PROFESSIONAL', 'FIRM'] as const;
+type ValidTone = typeof VALID_TONES[number];
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
@@ -17,6 +21,11 @@ export async function POST(req: NextRequest) {
     if (!task?.invoice) {
       return NextResponse.json({ error: 'Missing task data' }, { status: 400 });
     }
+
+    // 验证 tone 白名单
+    const safeTone: ValidTone = VALID_TONES.includes(tone as ValidTone) 
+      ? (tone as ValidTone) 
+      : 'PROFESSIONAL';
 
     const ctx = {
       invoice_number: task.invoice.invoice_number,
@@ -36,7 +45,7 @@ export async function POST(req: NextRequest) {
     };
 
     const provider = getAIProvider();
-    const result = await aiService.generateCollectionMessage(ctx, tone, provider);
+    const result = await aiService.generateCollectionMessage(ctx, safeTone, provider);
 
     return NextResponse.json({
       subject: result.subject,

@@ -23,8 +23,26 @@ function assertSafeDatabaseUrl(url: string, env: string): void {
     ].some(p => lower.includes(p));
   };
 
-  if (env !== 'test') {
-    // 生产/开发环境：禁止指向测试数据库（防止误连）
+  if (env === 'test') {
+    // 测试环境：禁止生产数据库 URL（FAIL CLOSED）
+    if (isProductionPattern(url)) {
+      throw new Error(
+        `[P0-SAFETY] 测试环境检测到生产数据库连接！\n` +
+        `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
+        `  请设置 .env.test 指向 SQLite，禁止测试连接生产库。`
+      );
+    }
+    // 测试环境必须使用 SQLite
+    const isSQLite = url.includes('sqlite') || url.endsWith('.db') || url.endsWith('/dev.db');
+    if (!isSQLite) {
+      throw new Error(
+        `[P0-SAFETY] 测试环境必须使用 SQLite！\n` +
+        `  当前 DATABASE_URL: ${url}\n` +
+        `  请设置 DATABASE_URL=file:./prisma/dev.db`
+      );
+    }
+  } else if (env === 'production') {
+    // 生产环境：禁止指向测试数据库（防止误连）
     if (url.includes('sqlite') || url.endsWith('.db') || url.includes('./prisma/dev')) {
       throw new Error(
         `[P0-SAFETY] 生产环境检测到测试数据库连接！\n` +
@@ -32,34 +50,18 @@ function assertSafeDatabaseUrl(url: string, env: string): void {
         `  请检查 NODE_ENV 设置。`
       );
     }
-    // 同时检查是否指向已知生产供应商（防配置错误）
+    // 生产环境允许合法的生产数据库 URL
+  } else {
+    // 未知/缺失环境：FAIL CLOSED —— 拒绝生产数据库 URL
+    // 防 CI/脚本忘了设 NODE_ENV 就直接连生产库
     if (isProductionPattern(url)) {
       throw new Error(
-        `[P0-SAFETY] 检测到生产数据库 URL！\n` +
+        `[P0-SAFETY] 环境未知却检测到生产数据库 URL！\n` +
+        `  NODE_ENV: ${process.env.NODE_ENV || '(未设置)'}\n` +
         `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
-        `  请确认 NODE_ENV=production 是预期行为。`
+        `  请设置 NODE_ENV=test 或 NODE_ENV=production 后再运行。`
       );
     }
-    return;
-  }
-
-  // 测试环境：禁止连接生产数据库（FAIL CLOSED）
-  if (isProductionPattern(url)) {
-    throw new Error(
-      `[P0-SAFETY] 测试环境检测到生产数据库连接！\n` +
-      `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
-      `  请设置 .env.test 指向 SQLite，禁止测试连接生产库。`
-    );
-  }
-
-  // 测试环境必须使用 SQLite
-  const isSQLite = url.includes('sqlite') || url.endsWith('.db') || url.endsWith('/dev.db');
-  if (!isSQLite) {
-    throw new Error(
-      `[P0-SAFETY] 测试环境必须使用 SQLite！\n` +
-      `  当前 DATABASE_URL: ${url}\n` +
-      `  请设置 DATABASE_URL=file:./prisma/dev.db`
-    );
   }
 }
 

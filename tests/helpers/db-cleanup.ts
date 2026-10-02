@@ -17,24 +17,25 @@ import { prisma } from '../../src/lib/db/client';
 /**
  * 按外键依赖顺序清理所有表
  * 关键：先删直接引用用户/公司的表，再删公司，最后删用户
+ * 注意：保留 User 表最后一删，因为 Company 关联到 User
+ * 
+ * R3-05 修复：恢复外键约束（派工单明确禁止关闭FK）
  */
 export async function cleanDatabase(): Promise<void> {
-  try {
-    // 临时禁用外键检查
-    await prisma.$executeRawUnsafe('PRAGMA foreign_keys = OFF');
-    
-    const tables = [
-      'AIFeedback', 'CollectionTask', 'PaymentRecord', 'Upload', 'Subscription',
-      'Invoice', 'Customer', 'Company', 'User'
-    ];
-    
-    for (const table of tables) {
-      await prisma.$executeRawUnsafe(`DELETE FROM "${table}"`).catch(() => {});
-    }
-    
-    // 重新启用外键检查
-    await prisma.$executeRawUnsafe('PRAGMA foreign_keys = ON');
-  } catch (e) {
-    console.warn('cleanDatabase warning:', e);
+  // 按依赖顺序从叶子到根清理（外键约束保持ON）
+  const tables = [
+    'AIFeedback',      // 引用 Company, Task
+    'CollectionTask',  // 引用 Company
+    'PaymentRecord',   // 引用 Company, Customer, Invoice
+    'Upload',          // 引用 Company
+    'Subscription',    // 引用 User, Company
+    'Invoice',         // 引用 Company, Customer
+    'Customer',        // 引用 Company
+    'Company',         // 引用 User
+    'User',
+  ];
+
+  for (const table of tables) {
+    await prisma.$executeRawUnsafe(`DELETE FROM "${table}"`);
   }
 }
