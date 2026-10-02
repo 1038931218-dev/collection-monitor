@@ -23,8 +23,8 @@ module.exports = {
   // 增加超时时间以支持 PostgreSQL 远程连接
   testTimeout: 60000,
   hookTimeout: 60000,
-  // 测试前加载 .env.test
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  // 测试前加载 .env.test（必须在模块 import 之前）
+  setupFiles: ['<rootDir>/tests/setup.js'],
   // 禁用并发，避免测试间数据竞争
   maxWorkers: 1,
   serial: true,

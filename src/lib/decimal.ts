@@ -1,4 +1,6 @@
 // 精确数值处理 - 使用整数存储分，避免浮点误差
+import { StrictDate } from './strict-date';
+
 export class DecimalMoney {
   private _cents: number;
 
@@ -84,41 +86,22 @@ export class DateUtils {
     return new Date(now.getFullYear(), now.getMonth(), now.getDate());
   }
 
+  /**
+   * @deprecated P0-01（2026-10-01）—— 请勿在新代码中使用，改用 `StrictDate.parse`。
+   *
+   * 历史问题：本方法原先直接 `new Date(str)`，会静默接受不存在的日期：
+   *   2026-02-30 → 2026-03-02（JS 自动滚动）
+   *   2026-02-29 → 2026-03-01
+   *   "0"        → 2000-01-01
+   * 而解析失败时返回 null，调用方（data-normalizer）又用 `|| today` 兜底，
+   * 导致非法日期要么被改写成另一个日期、要么被伪装成「今天」，
+   * 两条路都会污染 days_overdue → aging → priority_score。
+   *
+   * 现内部已改为完全委托 StrictDate，不再保留任何宽松行为。
+   * 保留签名的唯一目的是兼容既有调用点。
+   */
   static parseDate(str: string): Date | null {
-    if (!str) return null;
-    
-    // 尝试多种格式
-    const formats = [
-      /^\d{4}-\d{2}-\d{2}$/,  // YYYY-MM-DD
-      /^\d{2}\/\d{2}\/\d{4}$/, // MM/DD/YYYY
-      /^\d{2}-\d{2}-\d{4}$/,   // MM-DD-YYYY
-      /^\d{4}\/\d{2}\/\d{2}$/, // YYYY/MM/DD
-      /^\d{8}$/,                // YYYYMMDD
-    ];
-
-    // 直接解析
-    const date = new Date(str);
-    if (!isNaN(date.getTime())) {
-      return date;
-    }
-
-    // MM/DD/YYYY 格式
-    const mmddyyyy = str.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
-    if (mmddyyyy) {
-      const d = new Date(`${mmddyyyy[3]}-${mmddyyyy[1]}-${mmddyyyy[2]}`);
-      if (isNaN(d.getTime())) return null;  // PT-01: 掐断 NaN 污染链
-      return d;
-    }
-
-    // DD/MM/YYYY 格式
-    const ddmmyyyy = str.match(/^(\d{2})[\/\-](\d{2})[\/\-](\d{4})$/);
-    if (ddmmyyyy) {
-      const d = new Date(`${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`);
-      if (isNaN(d.getTime())) return null;  // DD/MM/YYYY 同样防护
-      return d;
-    }
-
-    return null;
+    return StrictDate.parse(str);
   }
 
   static daysBetween(date1: Date, date2: Date): number {

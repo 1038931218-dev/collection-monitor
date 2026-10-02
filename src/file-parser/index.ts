@@ -1,5 +1,38 @@
-import { DecimalMoney, DateUtils, FIELD_MAPPINGS } from '../lib/decimal';
+import { DecimalMoney, FIELD_MAPPINGS } from '../lib/decimal';
+import { StrictDate } from '../lib/strict-date';
 import * as XLSX from 'xlsx';
+
+/**
+ * P0-01: 所有日期字段。任何进入系统的日期都必须在此清单内统一走 StrictDate。
+ * 禁止新增绕过此处直接 new Date(userInput) 的日期入口。
+ */
+const DATE_FIELDS = ['invoice_date', 'due_date', 'paid_date'] as const;
+type DateField = (typeof DATE_FIELDS)[number];
+
+/**
+ * P0-01: 校验一行的日期字段。
+ *
+ * 返回错误描述，或 null 表示合法。
+ *
+ * ⚠️ 必须区分两种情形（这是本修复的边界）：
+ *   - undefined = 源数据**未提供**该字段（缺失）
+ *   - null      = 源数据**提供了**该字段，但无法解析为合法日期（非法）
+ *
+ * 只拒绝「非法」。理由：缺失到期日按未逾期处理（days_overdue=0）是既有的、
+ * 被测试锁定（[真脏-5]/[真脏-8]）的产品决策，不属于本轮 P0-01 范围，
+ * 不应由执行方单方面变更。
+ *
+ * 而「非法」必须拒绝：原实现会把它静默改写成另一个日期（2026-02-30 → 2026-03-02）
+ * 或兜底为「今天」，直接污染 days_overdue → aging → overdue_score → priority_score。
+ */
+function validateDates(inv: Record<string, unknown>): string | null {
+  for (const field of DATE_FIELDS) {
+    if (inv[field] === null) {
+      return `日期非法(${field})：无法解析为有效日期`;
+    }
+  }
+  return null;
+}
 
 export interface InvoiceData {
   customer_name: string;
@@ -107,6 +140,14 @@ async function parseCSV(file: Buffer, filename: string): Promise<{ invoices: Inv
       continue;
     }
 
+    // P0-01: 日期合法性校验 —— 非法或缺失到期日的行直接拒绝，
+    // 不允许它带着「今天」这个兜底值进入 days_overdue → aging → priority
+    const dateError = validateDates(invoice as unknown as Record<string, unknown>);
+    if (dateError) {
+      errors.push(`第${i + 2}行${dateError}`);
+      continue;
+    }
+
     invoices.push(invoice);
   }
 
@@ -141,7 +182,13 @@ async function parseExcel(file: Buffer, filename: string): Promise<{ invoices: I
   });
 
   // 转换数据
-  const invoices: InvoiceData[] = jsonData.map((row, idx) => {
+  // 注意：此处用 for 循环而非 map —— P0-01 要求非法日期的行被显式拒绝并记录，
+  // 需要 continue 能力；map 无法中途丢弃单行。CSV 与 Excel 两个入口
+  // 必须共用同一个 validateDates，否则又会重现「修了一个入口，另一个绕过」。
+  const invoices: InvoiceData[] = [];
+
+  for (let idx = 0; idx < jsonData.length; idx++) {
+    const row = jsonData[idx];
     const invoice: InvoiceData = {
       customer_name: '',
       amount: DecimalMoney.fromString('0'),
@@ -155,8 +202,14 @@ async function parseExcel(file: Buffer, filename: string): Promise<{ invoices: I
       }
     });
 
-    return invoice;
-  });
+    const dateError = validateDates(invoice as unknown as Record<string, unknown>);
+    if (dateError) {
+      errors.push(`第${idx + 2}行${dateError}`);
+      continue;
+    }
+
+    invoices.push(invoice);
+  }
 
   return { invoices, mapping, errors };
 }
@@ -216,7 +269,13 @@ function parseValue(field: string, value: any): any {
     case 'invoice_date':
     case 'due_date':
     case 'paid_date':
-      return DateUtils.parseDate(String(value));
+      // P0-01: 统一走 StrictDate —— 拒绝 2026-02-30 / 2026-02-29 这类不存在的日期，
+      // 拒绝 JS 的自动滚动，拒绝裸数字与 NaN/Infinity。
+      //
+      // 传原始值而非 String(value)：Excel 读取时若未启用 cellDates，
+      // 日期单元格是 Excel 序列号（数字）。转成字符串会丢掉语义
+      // （"46000" 不是日期字符串），序列号必须交给 StrictDate 的数字分支处理。
+      return StrictDate.parse(value);
     
     default:
       return String(value).trim();

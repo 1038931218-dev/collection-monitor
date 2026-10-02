@@ -133,10 +133,36 @@ export class StrictDate {
     }
 
     // 6. ISO 格式（2026-01-15T10:30:00Z）
-    const iso = str.match(/^\d{4}-\d{2}-\d{2}T/);
+    //
+    // ⚠️ P0-01 修复（2026-10-01，红队复测发现）：
+    // 原实现直接 `new Date(str)` 并只检查 isNaN —— 但 ISO 解析同样会静默滚动：
+    //   "2026-02-30T00:00:00Z" → 2026-03-02
+    // 实测该输入经文件路径进入后产生 days_overdue=212，直接污染 Priority。
+    // 且本函数是 API 与文件两条入口共用的，一开始的修复只覆盖了
+    // YYYY-MM-DD 等分支，ISO 分支成了绕过通道。
+    // 现在对 ISO 也做日历回环校验：解析出的年月日必须与输入一致。
+    const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})T/);
     if (iso) {
+      const year = parseInt(iso[1], 10);
+      const month = parseInt(iso[2], 10);
+      const day = parseInt(iso[3], 10);
+
+      if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+
       const d = new Date(str);
-      return isNaN(d.getTime()) ? null : d;
+      if (isNaN(d.getTime())) return null;
+
+      // 回环校验：不存在的日期（如 02-30）会被 JS 滚动，年月日将与输入不符
+      const utc = new Date(Date.UTC(year, month - 1, day));
+      if (
+        utc.getUTCFullYear() !== year ||
+        utc.getUTCMonth() !== month - 1 ||
+        utc.getUTCDate() !== day
+      ) {
+        return null;
+      }
+
+      return d;
     }
 
     // 其他格式一律拒绝

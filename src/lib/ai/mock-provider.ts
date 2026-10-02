@@ -7,18 +7,20 @@
  *   - 生产环境 AI 不可用时的 fallback
  *
  * 此 Provider 永不执行网络请求，行为完全确定。
+ * 关键：记录 lastPrompt，供 PT-04 提示注入测试验证输入是否被正确清洗。
  */
 import { AIProvider } from './provider';
 import { AiInvoiceAnalysis, AiReportAnalysis, AIInvoiceContext, AIReportContext } from './types';
+import { buildInvoicePrompt, buildMessagePrompt, buildReportPrompt, buildSystemPrompt } from './prompt-builder';
 
 export class MockAIProvider implements AIProvider {
+  /** 最后一次发送给 AI 的完整 prompt（含 system + user），供测试断言 */
+  lastPrompt: string = '';
+
   constructor(
     private options: {
-      /** 自定义报告分析结果（覆盖默认值） */
       reportOverride?: Partial<AiReportAnalysis>;
-      /** 自定义发票分析结果（覆盖默认值） */
       invoiceOverride?: Partial<AiInvoiceAnalysis>;
-      /** 是否抛出错误（用于测试 fallback） */
       throwOnError?: boolean;
     } = {}
   ) {}
@@ -31,6 +33,8 @@ export class MockAIProvider implements AIProvider {
     if (this.options.throwOnError) {
       throw new Error('[Mock] Simulated AI failure');
     }
+    // 记录 prompt 供 PT-04 测试验证
+    this.lastPrompt = buildSystemPrompt() + '\n\n' + buildReportPrompt(data);
 
     return {
       summary: `[模拟] 应收账款总额 ${data.total_receivables}，逾期 ${data.overdue_ratio}%。高优先级 ${data.high_priority_count} 个，中优先级 ${data.medium_priority_count} 个。`,
@@ -53,26 +57,26 @@ export class MockAIProvider implements AIProvider {
     };
   }
 
-  async analyzeInvoice(_data: AIInvoiceContext): Promise<AiInvoiceAnalysis> {
+  async analyzeInvoice(data: AIInvoiceContext): Promise<AiInvoiceAnalysis> {
     if (this.options.throwOnError) {
       throw new Error('[Mock] Simulated AI failure');
     }
+    // 记录 prompt 供 PT-04 测试验证
+    this.lastPrompt = buildSystemPrompt() + '\n\n' + buildInvoicePrompt(data);
 
-    // 模拟 AI 分析，添加固定前缀以区分 Mock 输出
-    const prefix = '[MockAI] ';
     return {
-      summary: `${prefix}客户 ${_data.customer_name} 的账款状态：逾期 ${_data.days_overdue} 天，未收 ${_data.outstanding_amount}，优先级 ${_data.priority_level}。根据历史行为分析，建议采取相应措施。`,
-      reason: _data.reason,
-      recommended_action: _data.days_overdue >= 60 ? 'follow_up_now'
-        : _data.days_overdue >= 30 ? 'follow_up_later'
-        : _data.priority_level === 'HIGH' ? 'follow_up_now'
+      summary: `[MockAI] 客户 ${data.customer_name} 的账款状态：逾期 ${data.days_overdue} 天，未收 ${data.outstanding_amount}，优先级 ${data.priority_level}。`,
+      reason: data.reason,
+      recommended_action: data.days_overdue >= 60 ? 'follow_up_now'
+        : data.days_overdue >= 30 ? 'follow_up_later'
+        : data.priority_level === 'HIGH' ? 'follow_up_now'
         : 'monitor',
-      recommended_timing: _data.days_overdue >= 90 ? 'today'
-        : _data.days_overdue >= 30 ? 'within_3_days'
-        : _data.days_overdue > 0 ? 'next_week'
+      recommended_timing: data.days_overdue >= 90 ? 'today'
+        : data.days_overdue >= 30 ? 'within_3_days'
+        : data.days_overdue > 0 ? 'next_week'
         : 'monitor',
-      message_tone: _data.days_overdue >= 60 ? 'FIRM'
-        : _data.days_overdue >= 30 ? 'PROFESSIONAL'
+      message_tone: data.days_overdue >= 60 ? 'FIRM'
+        : data.days_overdue >= 30 ? 'PROFESSIONAL'
         : 'FRIENDLY',
       ...this.options.invoiceOverride,
     };
@@ -85,6 +89,8 @@ export class MockAIProvider implements AIProvider {
     if (this.options.throwOnError) {
       throw new Error('[Mock] Simulated AI failure');
     }
+    // 记录 prompt 供 PT-04 测试验证
+    this.lastPrompt = buildSystemPrompt() + '\n\n' + buildMessagePrompt(data, tone);
 
     const amount = data.outstanding_amount;
     const days = data.days_overdue;

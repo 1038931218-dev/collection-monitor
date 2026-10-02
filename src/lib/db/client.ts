@@ -3,55 +3,56 @@
 // 禁止在业务逻辑/UI/API 层直接 import @prisma/client。
 //
 // 重要：使用 lazy init 模式，确保在测试环境中 env 变量已设置后才初始化客户端。
+// 注意：不要直接导出 prisma 实例，应使用 getPrisma() 延迟初始化。
 
 import * as path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 
 // ─── 安全闸门：禁止测试连接生产数据库 ─────────────────────────────────────────
 // FAIL CLOSED: 任何异常都拒绝执行
-function assertSafeDatabaseUrl(url: string): void {
-  // 强制要求 NODE_ENV=test 时才能使用测试数据库
-  if (process.env.NODE_ENV !== 'test') {
-    const productionPatterns = [
+function assertSafeDatabaseUrl(url: string, env: string): void {
+  const isProductionPattern = (u: string): boolean => {
+    const lower = u.toLowerCase();
+    return [
       'neon.tech',
       'postgres://',
       'postgresql://',
       'aws.amazon.com',
       'render.com',
       'supabase.co',
-    ];
-    for (const pattern of productionPatterns) {
-      if (url.toLowerCase().includes(pattern.toLowerCase())) {
-        throw new Error(
-          `[P0-SAFETY] 生产环境检测到生产数据库连接！\n` +
-          `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
-          `  请检查 NODE_ENV 设置。`
-        );
-      }
+    ].some(p => lower.includes(p));
+  };
+
+  if (env !== 'test') {
+    // 生产/开发环境：禁止指向测试数据库（防止误连）
+    if (url.includes('sqlite') || url.endsWith('.db') || url.includes('./prisma/dev')) {
+      throw new Error(
+        `[P0-SAFETY] 生产环境检测到测试数据库连接！\n` +
+        `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
+        `  请检查 NODE_ENV 设置。`
+      );
+    }
+    // 同时检查是否指向已知生产供应商（防配置错误）
+    if (isProductionPattern(url)) {
+      throw new Error(
+        `[P0-SAFETY] 检测到生产数据库 URL！\n` +
+        `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
+        `  请确认 NODE_ENV=production 是预期行为。`
+      );
     }
     return;
   }
-  
+
   // 测试环境：禁止连接生产数据库（FAIL CLOSED）
-  const productionPatterns = [
-    'neon.tech',
-    'postgres://',
-    'postgresql://',
-    'aws.amazon.com',
-    'render.com',
-    'supabase.co',
-  ];
-  for (const pattern of productionPatterns) {
-    if (url.toLowerCase().includes(pattern.toLowerCase())) {
-      throw new Error(
-        `[P0-SAFETY] 测试环境检测到生产数据库连接！\n` +
-        `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
-        `  请设置 .env.test 指向 SQLite，禁止测试连接生产库。`
-      );
-    }
+  if (isProductionPattern(url)) {
+    throw new Error(
+      `[P0-SAFETY] 测试环境检测到生产数据库连接！\n` +
+      `  DATABASE_URL: ${url.substring(0, 80)}...\n` +
+      `  请设置 .env.test 指向 SQLite，禁止测试连接生产库。`
+    );
   }
-  
-  // 测试环境必须使用 SQLite（检查文件扩展名或 sqlite 关键字）
+
+  // 测试环境必须使用 SQLite
   const isSQLite = url.includes('sqlite') || url.endsWith('.db') || url.endsWith('/dev.db');
   if (!isSQLite) {
     throw new Error(
@@ -64,23 +65,36 @@ function assertSafeDatabaseUrl(url: string): void {
 
 // 开发/测试环境回退：若未设置 DATABASE_URL，使用项目内 SQLite dev.db
 function resolveDevUrl(): string {
+  // 注意：这里读取的是运行时环境变量，可能在 jest setupFilesAfterEnv 之后才被正确设置
+  const env = process.env.NODE_ENV || 'development';
+
   // 测试环境强制使用 SQLite
-  if (process.env.NODE_ENV === 'test') {
-    // Windows 路径如 file:F:\... 或 file:./...
-    const sqliteUrl = `file:${path.resolve(__dirname, '../../../prisma/dev.db')}`;
-    assertSafeDatabaseUrl(sqliteUrl);
+  if (env === 'test') {
+    // 优先使用环境变量（如果已设置且合法）
+    if (process.env.DATABASE_URL) {
+      assertSafeDatabaseUrl(process.env.DATABASE_URL, env);
+      return process.env.DATABASE_URL;
+    }
+    // 使用进程工作目录解析路径（确保路径正确）
+    const sqliteUrl = `file:${path.resolve(process.cwd(), 'prisma', 'dev.db')}`;
+    assertSafeDatabaseUrl(sqliteUrl, env);
     return sqliteUrl;
   }
-  // 生产/开发环境使用 DATABASE_URL 或回退到 SQLite
+
+  // 生产/开发环境
   if (process.env.DATABASE_URL) {
+    assertSafeDatabaseUrl(process.env.DATABASE_URL, env);
     return process.env.DATABASE_URL;
   }
-  const p = path.resolve(__dirname, '../../../prisma/dev.db');
-  return `file:${p}`;
+
+  // 回退到本地 SQLite（仅开发环境）
+  const p = path.resolve(process.cwd(), 'prisma', 'dev.db');
+  const fallbackUrl = `file:${p}`;
+  assertSafeDatabaseUrl(fallbackUrl, env);
+  return fallbackUrl;
 }
 
 // ─── Lazy Init：延迟到首次访问时创建客户端 ──────────────────────────────────────
-// 这确保 jest setupFilesAfterEnv 已设置好环境变量
 let _prisma: PrismaClient | null = null;
 
 export const getPrisma = (): PrismaClient => {
@@ -93,5 +107,10 @@ export const getPrisma = (): PrismaClient => {
   return _prisma;
 };
 
-// 向后兼容：导出 getPrisma 作为默认访问方式
+// ⚠️ 不要直接导出 prisma 实例！
+// 直接导出会导致模块 import 时立即初始化，此时环境变量可能未正确设置。
+// 请使用 getPrisma() 延迟获取。
+
+// 向后兼容的默认导出（已废弃，建议改用 getPrisma()）
+// 注意：这会在模块 import 时立即初始化，仅在未正确设置 NODE_ENV 时工作
 export const prisma = getPrisma();
